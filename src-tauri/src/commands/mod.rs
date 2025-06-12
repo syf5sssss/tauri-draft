@@ -1,13 +1,15 @@
 // src/commands/mod.rs
-pub mod greet;
 pub mod book;
 pub mod draft;
+pub mod envpath;
+pub mod greet;
 pub mod sqlx;
 
 // 导出所有命令函数
-pub use greet::*;
 pub use book::*;
 pub use draft::*;
+pub use envpath::*;
+pub use greet::*;
 pub use sqlx::*;
 
 // 生成最终的处理函数
@@ -22,6 +24,14 @@ macro_rules! register_commands {
             $crate::commands::book::list,
             $crate::commands::book::search,
             $crate::commands::book::dynamics_search,
+            $crate::commands::book::create,
+            $crate::commands::book::update,
+            $crate::commands::book::delete,
+            $crate::commands::book::deletes,
+            $crate::commands::book::save_image,
+            $crate::commands::env_path::get_exe_dir,
+            $crate::commands::env_path::get_pictures_dir,
+            $crate::commands::env_path::get_documents_dir,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

@@ -1,5 +1,5 @@
-use chrono::{ DateTime, Utc };
-use sqlx::{ Database, QueryBuilder, Encode, Type };
+use chrono::{DateTime, Utc};
+use sqlx::{Database, Encode, QueryBuilder, Type};
 
 // 参数类型枚举
 #[derive(Clone)]
@@ -15,21 +15,24 @@ pub enum Param {
 
 impl Param {
     pub fn bind<'a, DB>(&self, builder: &mut QueryBuilder<'a, DB>)
-        where
-            DB: Database,
-            i32: Encode<'a, DB> + Type<DB>,
-            i64: Encode<'a, DB> + Type<DB>,
-            f32: Encode<'a, DB> + Type<DB>,
-            f64: Encode<'a, DB> + Type<DB>,
-            String: Encode<'a, DB> + Type<DB>,
-            &'a str: Encode<'a, DB> + Type<DB>,
-            bool: Encode<'a, DB> + Type<DB>,
-            DateTime<Utc>: Encode<'a, DB> + Type<DB>
+    where
+        DB: Database,
+        i32: Encode<'a, DB> + Type<DB>,
+        i64: Encode<'a, DB> + Type<DB>,
+        f32: Encode<'a, DB> + Type<DB>,
+        f64: Encode<'a, DB> + Type<DB>,
+        String: Encode<'a, DB> + Type<DB>,
+        &'a str: Encode<'a, DB> + Type<DB>,
+        bool: Encode<'a, DB> + Type<DB>,
+        DateTime<Utc>: Encode<'a, DB> + Type<DB>,
     {
         // 处理字符串类型
         if let Param::String(v) = self {
             let sql = builder.sql();
-            let is_like = sql.contains(" LIKE ?") || sql.ends_with(" LIKE ?") || sql.contains(" LIKE ? ") || sql.contains(" LIKE ?,");
+            let is_like = sql.contains(" LIKE ?")
+                || sql.ends_with(" LIKE ?")
+                || sql.contains(" LIKE ? ")
+                || sql.contains(" LIKE ?,");
 
             if is_like && !v.contains('%') {
                 builder.push_bind(format!("%{}%", v));

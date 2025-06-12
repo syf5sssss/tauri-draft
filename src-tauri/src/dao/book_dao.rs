@@ -1,8 +1,10 @@
-use crate::{ commands::sqlx::POOL, dto::{ book::Book, BookQuery, Page } };
-use chrono::Utc;
-use sqlx::{ FromRow, MySqlPool, Row };
-use anyhow::{ Result, Context };
-use sqlx::{ QueryBuilder, MySql };
+use crate::{
+    commands::sqlx::POOL,
+    dto::{book::Book, BookQuery, Page},
+};
+use anyhow::{Context, Result};
+use sqlx::MySqlPool;
+use sqlx::{MySql, QueryBuilder};
 
 /// Book 表的数据访问对象
 pub struct BookDao;
@@ -12,23 +14,25 @@ impl BookDao {
     pub async fn create(book: &Book) -> Result<u64> {
         let pool = Self::get_pool().await?;
 
-        let result = sqlx
-            ::query(r#"
+        let result = sqlx::query(
+            r#"
             INSERT INTO book (
                 price, sales, publish_date, title, author, category, rating, img, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            "#)
-            .bind(book.price)
-            .bind(book.sales)
-            .bind(book.publish_date)
-            .bind(&book.title)
-            .bind(&book.author)
-            .bind(&book.category)
-            .bind(&book.rating)
-            .bind(&book.img)
-            .bind(&book.status)
-            .execute(&pool).await
-            .context("Failed to create book")?;
+            "#,
+        )
+        .bind(book.price)
+        .bind(book.sales)
+        .bind(book.publish_date)
+        .bind(&book.title)
+        .bind(&book.author)
+        .bind(&book.category)
+        .bind(&book.rating)
+        .bind(&book.img)
+        .bind(&book.status)
+        .execute(&pool)
+        .await
+        .context("Failed to create book")?;
 
         Ok(result.last_insert_id())
     }
@@ -37,15 +41,17 @@ impl BookDao {
     pub async fn get_by_id(id: u32) -> Result<Option<Book>> {
         let pool = Self::get_pool().await?;
 
-        let book = sqlx
-            ::query_as::<_, Book>(r#"
+        let book = sqlx::query_as::<_, Book>(
+            r#"
             SELECT id, price, sales, publish_date, title, author, category, rating, img, status
             FROM book
             WHERE id = ?
-            "#)
-            .bind(id)
-            .fetch_optional(&pool).await
-            .context("Failed to get book by ID")?;
+            "#,
+        )
+        .bind(id)
+        .fetch_optional(&pool)
+        .await
+        .context("Failed to get book by ID")?;
 
         Ok(book)
     }
@@ -54,9 +60,8 @@ impl BookDao {
     pub async fn update(book: &Book) -> Result<bool> {
         let pool = Self::get_pool().await?;
 
-        let rows_affected = sqlx
-            ::query(
-                r#"
+        let rows_affected = sqlx::query(
+            r#"
             UPDATE book SET
                 price = ?,
                 sales = ?,
@@ -65,24 +70,25 @@ impl BookDao {
                 author = ?,
                 category = ?,
                 rating = ?,
-                img = ?
+                img = ?,
                 status = ?
             WHERE id = ?
-            "#
-            )
-            .bind(book.price)
-            .bind(book.sales)
-            .bind(book.publish_date)
-            .bind(&book.title)
-            .bind(&book.author)
-            .bind(&book.category)
-            .bind(&book.rating)
-            .bind(&book.img)
-            .bind(&book.status)
-            .bind(book.id)
-            .execute(&pool).await
-            .context("Failed to update book")?
-            .rows_affected();
+            "#,
+        )
+        .bind(book.price)
+        .bind(book.sales)
+        .bind(book.publish_date)
+        .bind(&book.title)
+        .bind(&book.author)
+        .bind(&book.category)
+        .bind(book.rating)
+        .bind(&book.img)
+        .bind(&book.status)
+        .bind(book.id)
+        .execute(&pool)
+        .await
+        .context("Failed to update book")?
+        .rows_affected();
 
         Ok(rows_affected > 0)
     }
@@ -91,14 +97,52 @@ impl BookDao {
     pub async fn delete(id: u32) -> Result<bool> {
         let pool = Self::get_pool().await?;
 
-        let rows_affected = sqlx
-            ::query(r#"
+        let rows_affected = sqlx::query(
+            r#"
             DELETE FROM book
             WHERE id = ?
-            "#)
-            .bind(id)
-            .execute(&pool).await
-            .context("Failed to delete book")?
+            "#,
+        )
+        .bind(id)
+        .execute(&pool)
+        .await
+        .context("Failed to delete book")?
+        .rows_affected();
+
+        Ok(rows_affected > 0)
+    }
+
+    pub async fn deletes(ids: &[u32]) -> Result<bool> {
+        if ids.is_empty() {
+            return Ok(false);
+        }
+
+        let pool = Self::get_pool().await?;
+
+        // 构建 IN 子句的占位符
+        let placeholders = (0..ids.len()).map(|_| "?").collect::<Vec<_>>().join(",");
+
+        // 将格式化的SQL语句存储在变量中，延长其生命周期
+        let sql = format!(
+            r#"
+            DELETE FROM book
+            WHERE id IN ({})
+            "#,
+            placeholders
+        );
+
+        // 使用存储的SQL字符串创建查询
+        let mut query = sqlx::query(&sql);
+
+        // 绑定所有ID参数
+        for id in ids {
+            query = query.bind(id);
+        }
+
+        let rows_affected = query
+            .execute(&pool)
+            .await
+            .context("Failed to delete books")?
             .rows_affected();
 
         Ok(rows_affected > 0)
@@ -110,17 +154,19 @@ impl BookDao {
         let offset = (page - 1) * page_size;
         println!("{:?}-{:?}", offset, page_size);
         // 获取数据
-        let books = sqlx
-            ::query_as::<_, Book>(r#"
+        let books = sqlx::query_as::<_, Book>(
+            r#"
             SELECT id, price, sales, publish_date, title, author, category, rating, img, status
             FROM book
             ORDER BY publish_date DESC
             LIMIT ? OFFSET ?
-            "#)
-            .bind(page_size)
-            .bind(offset)
-            .fetch_all(&pool).await
-            .context("Failed to list books")?;
+            "#,
+        )
+        .bind(page_size)
+        .bind(offset)
+        .fetch_all(&pool)
+        .await
+        .context("Failed to list books")?;
 
         Ok(books)
     }
@@ -130,27 +176,36 @@ impl BookDao {
         let offset = (page - 1) * page_size;
         let search_pattern = format!("%{}%", query);
 
-        let str =
-            r#"SELECT id, price, sales, publish_date, title, author, category, rating, img, status
+        let str = r#"SELECT id, price, sales, publish_date, title, author, category, rating, img, status
             FROM book
             WHERE title LIKE ? OR author LIKE ? OR category LIKE ?
             ORDER BY publish_date DESC
             LIMIT ? OFFSET ?"#;
         // 获取数据
-        let books = sqlx::query_as::<_, Book>(&str).bind(&search_pattern).bind(&search_pattern).bind(&search_pattern).bind(page_size).bind(offset).fetch_all(&mut *pool.acquire().await?).await.context("Failed to search books")?;
+        let books = sqlx::query_as::<_, Book>(&str)
+            .bind(&search_pattern)
+            .bind(&search_pattern)
+            .bind(&search_pattern)
+            .bind(page_size)
+            .bind(offset)
+            .fetch_all(&mut *pool.acquire().await?)
+            .await
+            .context("Failed to search books")?;
 
         // 获取总数
-        let total: i32 = sqlx
-            ::query_scalar(r#"
+        let total: i32 = sqlx::query_scalar(
+            r#"
             SELECT COUNT(*) 
             FROM book
             WHERE title LIKE ? OR author LIKE ? OR category LIKE ?
-            "#)
-            .bind(&search_pattern)
-            .bind(&search_pattern)
-            .bind(&search_pattern)
-            .fetch_one(&mut *pool.acquire().await?).await
-            .context("Failed to get search count")?;
+            "#,
+        )
+        .bind(&search_pattern)
+        .bind(&search_pattern)
+        .bind(&search_pattern)
+        .fetch_one(&mut *pool.acquire().await?)
+        .await
+        .context("Failed to get search count")?;
 
         let pres = Page {
             data: books,
@@ -162,13 +217,19 @@ impl BookDao {
         Ok(pres)
     }
 
-    pub async fn dynamics_search(query: &BookQuery, page: i32, page_size: i32) -> Result<Page<Book>> {
+    pub async fn dynamics_search(
+        query: &BookQuery,
+        page: i32,
+        page_size: i32,
+    ) -> Result<Page<Book>> {
         println!("{:?}", query);
         let pool = Self::get_pool().await?;
         let offset = (page - 1) * page_size;
 
-        let mut data_builder: QueryBuilder<MySql> = QueryBuilder::new("SELECT * FROM book WHERE 1=1 ");
-        let mut count_builder: QueryBuilder<MySql> = QueryBuilder::new("SELECT COUNT(*) FROM book WHERE 1=1 ");
+        let mut data_builder: QueryBuilder<MySql> =
+            QueryBuilder::new("SELECT * FROM book WHERE 1=1 ");
+        let mut count_builder: QueryBuilder<MySql> =
+            QueryBuilder::new("SELECT COUNT(*) FROM book WHERE 1=1 ");
 
         if let Some(id) = query.id {
             data_builder.push(" AND id = ");
@@ -269,8 +330,16 @@ impl BookDao {
         println!("SQL-count: {}", count_builder.sql());
         println!("Page size: {}, Offset: {}", page_size, offset);
 
-        let books = data_builder.build_query_as().fetch_all(&mut *pool.acquire().await?).await.context("Failed to search books")?;
-        let total: i32 = count_builder.build_query_scalar().fetch_one(&mut *pool.acquire().await?).await.context("Failed to get search count")?;
+        let books = data_builder
+            .build_query_as()
+            .fetch_all(&mut *pool.acquire().await?)
+            .await
+            .context("Failed to search books")?;
+        let total: i32 = count_builder
+            .build_query_scalar()
+            .fetch_one(&mut *pool.acquire().await?)
+            .await
+            .context("Failed to get search count")?;
 
         Ok(Page {
             data: books,
@@ -295,7 +364,10 @@ impl BookDao {
     /// 获取数据库连接池
     async fn get_pool() -> Result<MySqlPool> {
         let guard = POOL.lock().await;
-        let pool = guard.as_ref().context("Database connection not initialized")?.clone();
+        let pool = guard
+            .as_ref()
+            .context("Database connection not initialized")?
+            .clone();
         Ok(pool)
     }
 }

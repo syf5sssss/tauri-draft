@@ -1,10 +1,12 @@
 use std::time::Duration;
 
 use commands::connect_db;
+use tauri_plugin_autostart::MacosLauncher;
 
-pub mod dto;
-pub mod dao;
 pub mod commands;
+pub mod dao;
+pub mod dto;
+pub mod util;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -16,6 +18,10 @@ pub fn run() {
     });
     tauri::Builder
         ::default()
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_window_state::Builder::new().build())
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(crate::commands::register_commands!())
         .run(tauri::generate_context!())

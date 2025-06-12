@@ -2,55 +2,80 @@
 import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core';
 import { getdate } from '../../util/dateutil.js'
+import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 
 let msg = ref('');
+const items = ref([{ id: 1 }, { id: 2 }, { id: 3 }]);
+const currentCount = ref(0);
+
+const incrementCount = () => {
+  currentCount.value++;
+};
 
 onMounted(() => {
-    msg.value = getdate();
+  msg.value = getdate();
 })
 
 async function greet() {
-    let res = await invoke('greet', { name: 'tauri' });
-    msg.value = res;
+  let res = await invoke('greet', { name: 'tauri' });
+  msg.value = res;
 }
 
 async function greetbook() {
-    let res = await invoke('greetbook');
-    msg.value = res;
+  let res = await invoke('greetbook');
+  msg.value = res;
 }
 
 async function greetbooks() {
-    let res = await invoke('greetbooks');
-    msg.value = res;
+  let res = await invoke('greetbooks');
+  msg.value = res;
 }
 
 async function multiplication99() {
-    let res = await invoke('multiplication99');
-    msg.value = res;
+  let res = await invoke('multiplication99');
+  msg.value = res;
 }
 
 async function connect_db() {
-    let res = await invoke('connect_db', { dbip: '127.0.0.1', username: 'sa', password: 'Nanhui-380' });
-    console.log(res);
-    msg.value = res;
+  let res = await invoke('connect_db', { dbip: '127.0.0.1', username: 'sa', password: 'Nanhui-380' });
+  console.log(res);
+  msg.value = res;
 }
 
 async function check_and_create_traft_db() {
-    let res = await invoke('check_and_create_traft_db', { dbname: 'draft' });
-    console.log(res);
-    msg.value = res;
+  let res = await invoke('check_and_create_traft_db', { dbname: 'draft' });
+  console.log(res);
+  msg.value = res;
 }
 
 async function selbook() {
-    let res = await invoke('selbook');
-    msg.value = res;
+  let res = await invoke('selbook');
+  msg.value = res;
+}
+
+function showindex(index) {
+  alert(index);
+}
+async function showauto() {
+  let s = await isEnabled();
+  msg.value = s;
+}
+async function setauto() {
+  await enable();
+  let s = await isEnabled();
+  msg.value = s;
+}
+async function disauto() {
+  disable();
+  let s = await isEnabled();
+  msg.value = s;
 }
 </script>
 
 <template>
-    <div class="multiplication-table">{{ msg }}</div>
-    <div>
-        <pre>
+  <div class="multiplication-table">{{ msg }}</div>
+  <div>
+    <pre>
       <code>
         #[tauri::command]
         fn greetbook() -> String {
@@ -90,24 +115,34 @@ async function selbook() {
         //安全并发：不可变的 &str 可以安全地在线程间共享
       </code>
     </pre>
+  </div>
+  <Button @click="greet">greet</Button>
+  <Button @click="greetbook" class="ml-2">greetBook</Button>
+  <Button @click="greetbooks" class="ml-2">greetBooks</Button>
+  <Button @click="multiplication99" class="ml-2">multiplication99</Button>
+  <Button @click="connect_db" class="ml-2">connect_db</Button>
+  <Button @click="check_and_create_traft_db" class="ml-2 mt-2">check_and_create_traft_db</Button>
+  <Button @click="selbook" class="ml-2">selbook</Button>
+  <Button @click="showauto" class="ml-2">showauto</Button>
+  <Button @click="setauto" class="ml-2">setauto</Button>
+  <Button @click="disauto" class="ml-2">disauto</Button>
+  <div>
+    <div v-for="item in items" :key="item.id">
+      <p>
+        <span @mounted="incrementCount" @click="showindex(currentCount)">{{ currentCount }}</span>
+      </p>
     </div>
-    <Button @click="greet">greet</Button>
-    <Button @click="greetbook" class="ml-2">greetBook</Button>
-    <Button @click="greetbooks" class="ml-2">greetBooks</Button>
-    <Button @click="multiplication99" class="ml-2">multiplication99</Button>
-    <Button @click="connect_db" class="ml-2">connect_db</Button>
-    <Button @click="check_and_create_traft_db" class="ml-2 mt-2">check_and_create_traft_db</Button>
-    <Button @click="selbook" class="ml-2">selbook</Button>
+  </div>
 </template>
 
 <style>
 .multiplication-table {
-    white-space: pre-wrap;
-    font-family: 'Courier New', monospace;
-    line-height: 1.5;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 4px;
-    tab-size: 8;
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  line-height: 1.5;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  tab-size: 8;
 }
 </style>

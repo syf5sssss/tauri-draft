@@ -1,5 +1,4 @@
-pub static BATCH_SQL: &str =
-    r#"CREATE TABLE IF NOT EXISTS `batch` (
+pub static BATCH_SQL: &str = r#"CREATE TABLE IF NOT EXISTS `batch` (
             `BatchID` int(11) NOT NULL AUTO_INCREMENT,
             `BatchTask` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
             `PotCode` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
@@ -18,16 +17,14 @@ pub static BATCH_SQL: &str =
             PRIMARY KEY (`BatchID`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"#;
 
-pub static USER_SQL: &str =
-    r#"CREATE TABLE IF NOT EXISTS `users` (
+pub static USER_SQL: &str = r#"CREATE TABLE IF NOT EXISTS `users` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `username` VARCHAR(50) NOT NULL UNIQUE,
             `email` VARCHAR(100) NOT NULL,
             `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"#;
 
-pub static BOOK_SQL: &str =
-    r#"CREATE TABLE `book` (
+pub static BOOK_SQL: &str = r#"CREATE TABLE `book` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `price` float DEFAULT NULL,
             `sales` bigint(20) DEFAULT NULL,

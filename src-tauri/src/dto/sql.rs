@@ -9,7 +9,12 @@ pub struct User {
 }
 impl User {
     pub fn new(id: u32, username: String, password: String, nickname: String) -> Self {
-        User { id, username, password, nickname }
+        User {
+            id,
+            username,
+            password,
+            nickname,
+        }
     }
 }
 
@@ -30,6 +35,9 @@ pub struct ColumnInfo {
 }
 impl ColumnInfo {
     pub fn new(column_name: String, data_type: String) -> Self {
-        ColumnInfo { column_name, data_type }
+        ColumnInfo {
+            column_name,
+            data_type,
+        }
     }
 }
