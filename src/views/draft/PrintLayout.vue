@@ -3,16 +3,27 @@ import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core';
 import { getdate } from '../../util/dateutil.js'
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+import Textarea from 'primevue/textarea';
+import { writeText, readText } from '@tauri-apps/plugin-clipboard-manager';
+import { ask, confirm, message, open, save } from '@tauri-apps/plugin-dialog';
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from '@tauri-apps/plugin-notification';
 
+let permissionGranted;
 let msg = ref('');
-const items = ref([{ id: 1 }, { id: 2 }, { id: 3 }]);
-const currentCount = ref(0);
+const textsvalue = ref('');
+onMounted(async () => {
+  // 你有发送通知的权限吗？
+  permissionGranted = await isPermissionGranted();
 
-const incrementCount = () => {
-  currentCount.value++;
-};
-
-onMounted(() => {
+  // 如果没有，我们需要请求它
+  if (!permissionGranted) {
+    const permission = await requestPermission();
+    permissionGranted = permission === 'granted';
+  }
   msg.value = getdate();
 })
 
@@ -53,9 +64,6 @@ async function selbook() {
   msg.value = res;
 }
 
-function showindex(index) {
-  alert(index);
-}
 async function showauto() {
   let s = await isEnabled();
   msg.value = s;
@@ -69,6 +77,62 @@ async function disauto() {
   disable();
   let s = await isEnabled();
   msg.value = s;
+}
+async function writeClipBoard() {
+  await writeText(textsvalue.value);
+  console.log(textsvalue.value);
+}
+async function readClipBoard() {
+  const content = await readText();
+  console.log(content);
+  textsvalue.value = content;
+}
+function sendNotificationMsg() {
+  if (permissionGranted) {
+    sendNotification({ title: 'Tauri', body: msg.value });
+  }
+}
+async function dialog1() {
+  const answer = await ask('This action cannot be reverted. Are you sure?', {
+    title: 'Tauri',
+    kind: 'warning',
+  });
+
+  console.log(answer);
+}
+
+async function dialog2() {
+  // Creates a confirmation Ok/Cancel dialog
+  const confirmation = await confirm(
+    'This action cannot be reverted. Are you sure?',
+    { title: 'Tauri', kind: 'warning' }
+  );
+
+  console.log(confirmation);
+}
+async function dialog3() {
+  await message('File not found', { title: 'Tauri', kind: 'error' });
+}
+//multiple 选项控制对话框是否允许多重选择，而 directory 则控制对话框是否允许目录选择。
+async function dialog4() {
+  // Open a dialog
+  const file = await open({
+    multiple: false,
+    directory: false,
+  });
+  console.log(file);
+}
+async function dialog5() {
+  // Prompt to save a 'My Filter' with extension .png or .jpeg
+  const path = await save({
+    filters: [
+      {
+        name: 'My Filter',
+        extensions: ['png', 'jpeg'],
+      },
+    ],
+  });
+  console.log(path);
 }
 </script>
 
@@ -123,16 +187,25 @@ async function disauto() {
   <Button @click="connect_db" class="ml-2">connect_db</Button>
   <Button @click="check_and_create_traft_db" class="ml-2 mt-2">check_and_create_traft_db</Button>
   <Button @click="selbook" class="ml-2">selbook</Button>
-  <Button @click="showauto" class="ml-2">showauto</Button>
-  <Button @click="setauto" class="ml-2">setauto</Button>
-  <Button @click="disauto" class="ml-2">disauto</Button>
-  <div>
-    <div v-for="item in items" :key="item.id">
-      <p>
-        <span @mounted="incrementCount" @click="showindex(currentCount)">{{ currentCount }}</span>
-      </p>
-    </div>
+  <br>
+  <Button @click="showauto" class="ml-2 mt-2">showauto</Button>
+  <Button @click="setauto" class="ml-2 mt-2">setauto</Button>
+  <Button @click="disauto" class="ml-2 mt-2">disauto</Button>
+
+  <br>
+  <Button @click="sendNotificationMsg" class="ml-2 mt-2">sendNotificationMsg</Button>
+  <br>
+  <Button @click="dialog1" class="ml-2 mt-2">Yes/No按钮的提问对话框</Button>
+  <Button @click="dialog2" class="ml-2 mt-2">Ok/Cancel按钮的提问对话框</Button>
+  <Button @click="dialog3" class="ml-2 mt-2">Ok按钮的消息对话框</Button>
+  <Button @click="dialog4" class="ml-2 mt-2">打开一个文件/目录选择对话框</Button>
+  <Button @click="dialog5" class="ml-2 mt-2">打开一个文件/目录保存对话框</Button>
+
+  <div class="card flex justify-center">
+    <Textarea v-model="textsvalue" rows="5" cols="130" />
   </div>
+  <Button @click="writeClipBoard" class="ml-2">writeClipBoard</Button>
+  <Button @click="readClipBoard" class="ml-2">readClipBoard</Button>
 </template>
 
 <style>

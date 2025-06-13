@@ -12,6 +12,16 @@
     "core:path:default",
     "core:path:allow-resolve",
     "core:path:allow-resolve-directory",
-    "os:default"
+    "os:default",
+    "os:allow-hostname",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
+    "notification:allow-request-permission",
+    "notification:default",
+    "dialog:allow-confirm",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message"
   ]
 }

@@ -1,5 +1,4 @@
 <script setup>
-import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
@@ -14,7 +13,6 @@ import DatePicker from 'primevue/datepicker';
 import Toast from 'primevue/toast';
 import FileUpload from 'primevue/fileupload';
 
-const exepath = ref();
 const imgpath = ref();
 const toast = useToast();
 const dt = ref();
@@ -25,8 +23,6 @@ const deleteBooksDialog = ref(false);
 const book = ref({});
 const selectedBooks = ref();
 
-
-// 分页状态
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalRecords = ref(0);
@@ -44,9 +40,6 @@ const status_s = ref(null);
 const min_publish_date_s = ref(null);
 const max_publish_date_s = ref(null);
 
-const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
 const statuses = ref([
     { label: '多库存', value: 'INSTOCK' },
     { label: '低库存', value: 'LOWSTOCK' },
@@ -66,9 +59,7 @@ const ratings = ref([
 ]);
 
 onMounted(async () => {
-    exepath.value = await invoke('get_exe_dir');
-    console.log(exepath.value);
-    imgpath.value = await invoke('get_pictures_dir');
+    imgpath.value = await invoke('get_exe_dir');
     console.log(imgpath.value);
     search();
 });
@@ -233,17 +224,6 @@ function deleteBook() {
     book.value = {};
 }
 
-function findIndexById(id) {
-    let index = -1;
-    for (let i = 0; i < books.value.length; i++) {
-        if (books.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
-    return index;
-}
-
 
 function exportCSV() {
     dt.value.exportCSV();
@@ -298,23 +278,6 @@ function getCategoryLabel(category) {
         case '2':
             return '哲学';
 
-        default:
-            return '其他';
-    }
-}
-
-function getRatingLabel(rating) {
-    switch (rating) {
-        case '1':
-            return '一级';
-        case '2':
-            return '二级';
-        case '3':
-            return '三级';
-        case '4':
-            return '四级';
-        case '5':
-            return '五级';
         default:
             return '其他';
     }
@@ -442,8 +405,7 @@ const onSelect = async (event) => {
                 </div>
             </Panel>
 
-            <DataTable ref="dt" v-model:selection="selectedBooks" :value="books" dataKey="id" :rows="pageSize"
-                :filters="filters">
+            <DataTable ref="dt" v-model:selection="selectedBooks" :value="books" dataKey="id" :rows="pageSize">
                 <template #header>
                     <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>

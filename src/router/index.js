@@ -19,6 +19,11 @@ const router = createRouter({
                     component: () => import('@/views/draft/PrintLayout.vue')
                 },
                 {
+                    path: '/draft/os',
+                    name: 'os',
+                    component: () => import('@/views/draft/OS.vue')
+                },
+                {
                     path: '/draft/crud',
                     name: 'crud-form',
                     component: () => import('@/views/draft/CRUD.vue')

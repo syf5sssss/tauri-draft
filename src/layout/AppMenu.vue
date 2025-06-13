@@ -12,6 +12,7 @@ const model = ref([
         label: 'Draft',
         items: [
             { label: 'Print', icon: 'pi pi-fw pi-home', to: '/draft/print' },
+            { label: 'OS', icon: 'pi pi-fw pi-home', to: '/draft/os' },
             { label: 'CRUD', icon: 'pi pi-fw pi-home', to: '/draft/crud' }
         ]
     },

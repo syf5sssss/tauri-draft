@@ -102,8 +102,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "fern 0.6.0",
+ "file-rotate",
  "log",
  "once_cell",
+ "rotation",
  "serde",
  "serde_json",
  "serde_with 1.14.0",
@@ -112,7 +115,9 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
  "tauri-plugin-log",
+ "tauri-plugin-notification",
  "tauri-plugin-opener",
  "tauri-plugin-os",
  "tauri-plugin-shell",
@@ -147,6 +152,24 @@ name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
+name = "ashpd"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cbdf310d77fd3aaee6ea2093db7011dc2d35d2eb3481e5607f1f8d942ed99df"
+dependencies = [
+ "enumflags2",
+ "futures-channel",
+ "futures-util",
+ "rand 0.9.1",
+ "raw-window-handle",
+ "serde",
+ "serde_repr",
+ "tokio",
+ "url",
+ "zbus",
+]
 
 [[package]]
 name = "async-broadcast"
@@ -1035,6 +1058,18 @@ checksum = "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b"
 
 [[package]]
 name = "dispatch2"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a0d569e003ff27784e0e14e4a594048698e0c0f0b66cabcb51511be55a7caa0"
+dependencies = [
+ "bitflags 2.9.1",
+ "block2 0.6.1",
+ "libc",
+ "objc2 0.6.1",
+]
+
+[[package]]
+name = "dispatch2"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89a09f22a6c6069a18470eb92d2298acf25463f14256d24778e1230d789a2aec"
@@ -1281,6 +1316,16 @@ dependencies = [
 
 [[package]]
 name = "fern"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c9a4820f0ccc8a7afd67c39a0f1a0f4b07ca1725164271a64939d7aeb9af065"
+dependencies = [
+ "log",
+ "reopen",
+]
+
+[[package]]
+name = "fern"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4316185f709b23713e41e3195f90edef7fb00c3ed4adc79769cf09cc762a3b29"
@@ -1296,6 +1341,16 @@ checksum = "38e2275cc4e4fc009b0669731a1e5ab7ebf11f469eaede2bab9309a5b4d6057f"
 dependencies = [
  "memoffset",
  "rustc_version",
+]
+
+[[package]]
+name = "file-rotate"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e8e2fa049328a1f3295991407a88585805d126dfaadf74b9fe8c194c730aafc"
+dependencies = [
+ "chrono",
+ "flate2",
 ]
 
 [[package]]
@@ -1494,6 +1549,12 @@ checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
 ]
+
+[[package]]
+name = "gcd-bitwise"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9d1865debb4cda2f341ca4c2bf87a96fd7e0b2b9603e37f53fc64bf0c8c1761"
 
 [[package]]
 name = "gdk"
@@ -2445,6 +2506,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 
 [[package]]
+name = "mac-notification-sys"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b95dfb34071d1592b45622bf93e315e3a72d414b6782aca9a015c12bec367ef"
+dependencies = [
+ "cc",
+ "objc2 0.6.1",
+ "objc2-foundation 0.3.1",
+ "time",
+]
+
+[[package]]
 name = "markup5ever"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2609,6 +2682,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "notify-rust"
+version = "4.11.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6442248665a5aa2514e794af3b39661a8e73033b1cc5e59899e1276117ee4400"
+dependencies = [
+ "futures-lite",
+ "log",
+ "mac-notification-sys",
+ "serde",
+ "tauri-winrt-notification",
+ "zbus",
+]
+
+[[package]]
 name = "num-bigint-dig"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2765,7 +2852,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c10c2894a6fed806ade6027bcd50662746363a9589d3ec9d9bef30a4e4bc166"
 dependencies = [
  "bitflags 2.9.1",
- "dispatch2",
+ "dispatch2 0.3.0",
  "objc2 0.6.1",
 ]
 
@@ -2776,7 +2863,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "989c6c68c13021b5c2d6b71456ebb0f9dc78d752e86a98da7c716f4f9470f5a4"
 dependencies = [
  "bitflags 2.9.1",
- "dispatch2",
+ "dispatch2 0.3.0",
  "objc2 0.6.1",
  "objc2-core-foundation",
  "objc2-io-surface",
@@ -3462,6 +3549,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
+dependencies = [
+ "rand_chacha 0.9.0",
+ "rand_core 0.9.3",
+]
+
+[[package]]
 name = "rand_chacha"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3482,6 +3579,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_chacha"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
+dependencies = [
+ "ppv-lite86",
+ "rand_core 0.9.3",
+]
+
+[[package]]
 name = "rand_core"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3497,6 +3604,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.16",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
+dependencies = [
+ "getrandom 0.3.3",
 ]
 
 [[package]]
@@ -3593,6 +3709,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "reopen"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c62a922bed1479591f4200e74d90354c5393f1fe3680a35c9b0a2d3ebbab6389"
+dependencies = [
+ "libc",
+ "signal-hook",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.12.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3628,6 +3754,31 @@ dependencies = [
  "wasm-streams",
  "web-sys",
  "windows-registry",
+]
+
+[[package]]
+name = "rfd"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "80c844748fdc82aae252ee4594a89b6e7ebef1063de7951545564cbc4e57075d"
+dependencies = [
+ "ashpd",
+ "block2 0.6.1",
+ "dispatch2 0.2.0",
+ "glib-sys",
+ "gobject-sys",
+ "gtk-sys",
+ "js-sys",
+ "log",
+ "objc2 0.6.1",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation 0.3.1",
+ "raw-window-handle",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3671,6 +3822,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "rotation"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "334efe3dd4284ff98c722f016db2679c2e6655fd1314ded8eaab9fb517c414e1"
+dependencies = [
+ "gcd-bitwise",
 ]
 
 [[package]]
@@ -4081,6 +4241,16 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
+name = "signal-hook"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e31d442c16f047a671b5a71e2161d6e68814012b7f5379d269ebd915fac2729"
+dependencies = [
+ "libc",
+ "signal-hook-registry",
+]
 
 [[package]]
 name = "signal-hook-registry"
@@ -4779,6 +4949,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-dialog"
+version = "2.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a33318fe222fc2a612961de8b0419e2982767f213f54a4d3a21b0d7b85c41df8"
+dependencies = [
+ "log",
+ "raw-window-handle",
+ "rfd",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-fs",
+ "thiserror 2.0.12",
+ "url",
+]
+
+[[package]]
+name = "tauri-plugin-fs"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ead0daec5d305adcefe05af9d970fc437bcc7996052d564e7393eb291252da"
+dependencies = [
+ "anyhow",
+ "dunce",
+ "glob",
+ "percent-encoding",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "tauri-utils",
+ "thiserror 2.0.12",
+ "toml",
+ "url",
+]
+
+[[package]]
 name = "tauri-plugin-log"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4786,7 +4996,7 @@ checksum = "8d2b582d860eb214f28323f4ce4f2797ae3b78f197e27b11677f976f9f52aedb"
 dependencies = [
  "android_logger",
  "byte-unit",
- "fern",
+ "fern 0.7.1",
  "log",
  "objc2 0.6.1",
  "objc2-foundation 0.3.1",
@@ -4798,6 +5008,25 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.12",
  "time",
+]
+
+[[package]]
+name = "tauri-plugin-notification"
+version = "2.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c474c7cc524385e682ccc1e149e13913a66fd8586ac4c2319cf01b78f070d309"
+dependencies = [
+ "log",
+ "notify-rust",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.12",
+ "time",
+ "url",
 ]
 
 [[package]]
@@ -4975,6 +5204,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-winrt-notification"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b1e66e07de489fe43a46678dd0b8df65e0c973909df1b60ba33874e297ba9b9"
+dependencies = [
+ "quick-xml 0.37.5",
+ "thiserror 2.0.12",
+ "windows",
+ "windows-version",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5128,6 +5369,7 @@ dependencies = [
  "signal-hook-registry",
  "socket2",
  "tokio-macros",
+ "tracing",
  "windows-sys 0.52.0",
 ]
 
@@ -6528,6 +6770,7 @@ dependencies = [
  "ordered-stream",
  "serde",
  "serde_repr",
+ "tokio",
  "tracing",
  "uds_windows",
  "windows-sys 0.59.0",
@@ -6653,6 +6896,7 @@ dependencies = [
  "endi",
  "enumflags2",
  "serde",
+ "url",
  "winnow 0.7.10",
  "zvariant_derive",
  "zvariant_utils",

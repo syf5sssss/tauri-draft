@@ -18,6 +18,7 @@ macro_rules! register_commands {
     () => {
         tauri::generate_handler![
             $crate::commands::greet::greet,
+            $crate::commands::greet::log_from_js,
             $crate::commands::draft::multiplication99,
             $crate::commands::book::greetbook,
             $crate::commands::book::greetbooks,
