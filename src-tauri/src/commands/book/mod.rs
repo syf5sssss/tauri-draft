@@ -4,7 +4,7 @@ use crate::dto::{ Book, BookQuery, Page };
 use chrono::Local;
 use std::fs;
 use std::path::PathBuf;
-use tauri::command;
+use tauri::{ command, AppHandle };
 use uuid::Uuid;
 
 #[command]
@@ -168,14 +168,13 @@ pub async fn deletes(ids: Vec<u32>) -> Result<String, String> {
     }
 }
 
-//get_pictures_dir
 #[command]
-pub async fn save_image(bytes: Vec<u8>) -> Result<String, String> {
-    match env_path::get_exe_dir() {
+pub async fn save_image(app: AppHandle, bytes: Vec<u8>) -> Result<String, String> {
+    match env_path::get_pictures_dir(app) {
         Ok(dir) => {
             println!("当前运行目录的地址: {:?}", dir);
             let base_dir = PathBuf::from(dir);
-            let target_dir = base_dir.join("Img").join("Draft");
+            let target_dir = base_dir.join("Draft").join("Img");
             let uuid = Uuid::new_v4();
             let file_name = uuid.to_string().replace("-", "") + ".png";
             if let Err(e) = fs::create_dir_all(&target_dir) {

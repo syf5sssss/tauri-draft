@@ -103,10 +103,8 @@ dependencies = [
  "anyhow",
  "chrono",
  "fern 0.6.0",
- "file-rotate",
  "log",
  "once_cell",
- "rotation",
  "serde",
  "serde_json",
  "serde_with 1.14.0",
@@ -1344,16 +1342,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "file-rotate"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e8e2fa049328a1f3295991407a88585805d126dfaadf74b9fe8c194c730aafc"
-dependencies = [
- "chrono",
- "flate2",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1549,12 +1537,6 @@ checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
 ]
-
-[[package]]
-name = "gcd-bitwise"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9d1865debb4cda2f341ca4c2bf87a96fd7e0b2b9603e37f53fc64bf0c8c1761"
 
 [[package]]
 name = "gdk"
@@ -3822,15 +3804,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "rotation"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "334efe3dd4284ff98c722f016db2679c2e6655fd1314ded8eaab9fb517c414e1"
-dependencies = [
- "gcd-bitwise",
 ]
 
 [[package]]

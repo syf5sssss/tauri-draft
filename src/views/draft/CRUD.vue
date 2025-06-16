@@ -59,7 +59,7 @@ const ratings = ref([
 ]);
 
 onMounted(async () => {
-    imgpath.value = await invoke('get_exe_dir');
+    imgpath.value = await invoke('get_pictures_dir');
     console.log(imgpath.value);
     search();
 });
@@ -434,7 +434,7 @@ const onSelect = async (event) => {
                 <!-- :src="`/demo/images/draft/${slotProps.data.img}`" -->
                 <Column header="封面" style="min-width: 6rem">
                     <template #body="slotProps">
-                        <img :src="`http://asset.localhost/${imgpath}/Img/Draft/${slotProps.data.img}`"
+                        <img :src="`http://asset.localhost/${imgpath}/Draft/Img/${slotProps.data.img}`"
                             :alt="slotProps.data.img" class="rounded" style="width: 6rem" />
                     </template>
                 </Column>
@@ -481,7 +481,7 @@ const onSelect = async (event) => {
         <Toast />
         <Dialog v-model:visible="bookDialog" :style="{ width: '450px' }" header="书籍详情" :modal="true">
             <div class="flex flex-col gap-6">
-                <img v-if="book.img" :src="`http://asset.localhost/${imgpath}/Img/Draft/${book.img}`" :alt="book.img"
+                <img v-if="book.img" :src="`http://asset.localhost/${imgpath}/Draft/Img/${book.img}`" :alt="book.img"
                     class="block m-auto pb-4" />
                 <FileUpload mode="basic" name="demo[]" url="" accept="image/*" :maxFileSize="100000000"
                     @select="onSelect" chooseLabel="封面" auto />

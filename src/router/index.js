@@ -24,6 +24,11 @@ const router = createRouter({
                     component: () => import('@/views/draft/OS.vue')
                 },
                 {
+                    path: '/draft/config',
+                    name: 'config',
+                    component: () => import('@/views/draft/Config.vue')
+                },
+                {
                     path: '/draft/crud',
                     name: 'crud-form',
                     component: () => import('@/views/draft/CRUD.vue')

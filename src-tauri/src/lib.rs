@@ -1,23 +1,29 @@
-use commands::connect_db;
+use commands::{ connect_db, AppState };
 use tauri_plugin_autostart::MacosLauncher;
 
 pub mod commands;
 pub mod dao;
 pub mod dto;
 pub mod util;
-use log::{ info, error };
-use std::{ fs::{ self, OpenOptions }, io };
+use log::info;
+use util::AppConfig;
+use std::{ fs::{ self, OpenOptions }, io, path::PathBuf };
 use std::path::Path;
 use std::time::Duration;
 use chrono::{ Local, Timelike };
+use std::sync::{ Arc, Mutex };
+use tauri::Manager;
 
-fn setup_logger() -> Result<(), fern::InitError> {
+fn setup_logger(target_dir: &PathBuf) -> Result<(), fern::InitError> {
     let now = Local::now();
-    let log_path = format!("{}/{}-{}/draft-{}.log", now.format("%Y"), now.format("%m"), now.format("%d"), now.format("%Y%m%d-%H"));
-    if let Err(e) = rotate_logs() {
+    let log_path = target_dir
+        .join("Draft")
+        .join(format!("{}", now.format("%Y")))
+        .join(format!("{}-{}", now.format("%m"), now.format("%d")))
+        .join(format!("draft-{}.log", now.format("%Y%m%d-%H")));
+    if let Err(e) = rotate_logs(&log_path) {
         println!("日志轮转失败: {}", e);
     }
-
     // 打开日志文件
     let log_file = OpenOptions::new().append(true).create(true).open(&log_path)?;
 
@@ -26,12 +32,14 @@ fn setup_logger() -> Result<(), fern::InitError> {
         ::new()
         .format(|out, message, record| { out.finish(format_args!("[{}][{}][{}] {}", Local::now().format("%Y-%m-%d %H:%M:%S"), record.target(), record.level(), message)) })
         .level(log::LevelFilter::Info)
+        .level_for("tao::platform_impl::platform::event_loop::runner", log::LevelFilter::Error)
         .chain(std::io::stdout())
         .chain(fern::Output::writer(Box::new(log_file), "\n"))
         .apply()?;
 
+    let thread_log_path = log_path.clone();
     // 启动后台线程检查整点
-    std::thread::spawn(|| {
+    std::thread::spawn(move || {
         loop {
             let now = Local::now();
             let sleep_seconds = if now.minute() == 0 && now.second() == 0 {
@@ -45,7 +53,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
             std::thread::sleep(Duration::from_secs(sleep_seconds as u64));
 
             // 触发轮转
-            if let Err(e) = rotate_logs() {
+            if let Err(e) = rotate_logs(&thread_log_path) {
                 println!("日志轮转失败: {}", e);
             }
         }
@@ -54,12 +62,8 @@ fn setup_logger() -> Result<(), fern::InitError> {
     Ok(())
 }
 
-fn rotate_logs() -> io::Result<()> {
-    let d = Local::now();
-    let log_path = format!("{}/{}-{}/draft-{}.log", d.format("%Y"), d.format("%m"), d.format("%d"), d.format("%Y%m%d-%H"));
-
-    let path = Path::new(&log_path);
-    println!("轮转了一次：{}", log_path);
+fn rotate_logs(log_path: &PathBuf) -> io::Result<()> {
+    let path = Path::new(log_path);
     // 一次性创建目录和文件
     if let Some(parent) = path.parent() {
         if !parent.exists() {
@@ -75,48 +79,43 @@ fn rotate_logs() -> io::Result<()> {
     Ok(())
 }
 
-// fn setup_logger() -> Result<(), fern::InitError> {
-//     // 创建日志轮转器 (保留5个10MB的日志文件)
-//     let log_rotator = FileRotate::new(
-//         "draft",
-//         AppendCount::new(500), // 保留5个历史文件
-//         // ContentLimit::Bytes(10 * 1024 * 1024), // 10MB轮转
-//         ContentLimit::Bytes(1024), // 10MB轮转
-//         #[cfg(not(windows))] file_rotate::compression::Compression
-//             // 非Windows系统添加压缩
-//             ::OnRotate(1),
-//         #[cfg(windows)] // Windows不需要压缩
-//         file_rotate::compression::Compression::None,
-//         None // 不添加时间戳后缀
-//     );
-
-//     // 配置日志系统
-//     fern::Dispatch
-//         ::new()
-//         .format(|out, message, record| { out.finish(format_args!("[{}][{}][{}] {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), record.target(), record.level(), message)) })
-//         .level(log::LevelFilter::Debug) // 全局日志级别
-//         .chain(std::io::stdout()) // 输出到控制台
-//         .chain(fern::Output::writer(Box::new(log_rotator), "\n")) // 输出到轮转文件
-//         .apply()?;
-
-//     Ok(())
-// }
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    setup_logger().expect("Failed to initialize logger");
-
-    info!("应用程序启动");
-    error!("示例错误日志");
-    tauri::async_runtime::spawn(async {
-        // 等待数据库连接
-        tokio::time::sleep(Duration::from_secs(2)).await;
-        let res = connect_db("127.0.0.1", "sa", "Nanhui-380").await;
-        println!("启动应用执行 {:?}", res);
-    });
-
     tauri::Builder
         ::default()
+        .setup(|app| {
+            let document_dir = app.path().document_dir();
+            if let Ok(dir) = &document_dir {
+                setup_logger(dir).expect("Failed to initialize logger");
+            }
+            info!("应用程序启动-日志开启");
+
+            let cp = AppConfig::config_path(app.handle());
+            info!("配置文件地址: {:?}", cp);
+            let app_config = AppConfig::load(app.handle()).unwrap_or_else(|e| {
+                eprintln!("Error loading config: {}, using default", e);
+                AppConfig::default()
+            });
+            app.manage(AppState {
+                config: Arc::new(Mutex::new(app_config)),
+            });
+            // 获取配置的克隆（而不是持有锁）
+            let config_clone;
+            {
+                let app_state = app.state::<AppState>();
+                let config = app_state.config.lock().unwrap();
+                info!("配置加载成功: {:?}", config);
+                config_clone = config.clone(); // 克隆配置数据
+            } // 锁在这里释放
+
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                let res = connect_db(&config_clone.ip, &config_clone.username, &config_clone.password).await;
+                info!("数据库启动 {:?}", res);
+            });
+
+            Ok(())
+        })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))

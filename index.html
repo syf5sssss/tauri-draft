@@ -7,11 +7,109 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>tauri-draft</title>
       <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet">
+      <style>
+            /* 加载动画样式 */
+            #app-loading {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: #1a202c;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  z-index: 9999;
+                  transition: opacity 0.5s ease-out;
+            }
+
+            .loading-spinner {
+                  width: 80px;
+                  height: 80px;
+                  border: 8px solid rgba(255, 255, 255, 0.1);
+                  border-radius: 50%;
+                  border-top: 8px solid #4299e1;
+                  animation: spin 1.2s linear infinite;
+            }
+
+            .loading-text {
+                  color: #e2e8f0;
+                  font-size: 1.2rem;
+                  margin-top: 20px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+
+            .progress-bar {
+                  width: 200px;
+                  height: 6px;
+                  background: rgba(255, 255, 255, 0.1);
+                  border-radius: 3px;
+                  margin-top: 20px;
+                  overflow: hidden;
+            }
+
+            .progress {
+                  height: 100%;
+                  background: #4299e1;
+                  width: 0%;
+                  transition: width 0.3s ease;
+            }
+
+            @keyframes spin {
+                  0% {
+                        transform: rotate(0deg);
+                  }
+
+                  100% {
+                        transform: rotate(360deg);
+                  }
+            }
+      </style>
 </head>
 
 <body>
+      <!-- 加载动画 -->
+      <div id="app-loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">加载应用中...</div>
+            <div class="progress-bar">
+                  <div class="progress" id="loading-progress"></div>
+            </div>
+      </div>
+
       <div id="app"></div>
       <script type="module" src="/src/main.js"></script>
+      <script>
+            // 监听页面加载完成事件
+            window.addEventListener('DOMContentLoaded', () => {
+                  // 模拟加载进度
+                  let progress = 0;
+                  const progressBar = document.getElementById('loading-progress');
+                  const interval = setInterval(() => {
+                        progress += Math.random() * 10;
+                        progressBar.style.width = `${Math.min(progress, 100)}%`;
+
+                        if (progress >= 100) {
+                              clearInterval(interval);
+                              // 页面加载完成时隐藏加载动画
+                              hideLoadingAnimation();
+                        }
+                  }, 10);
+            });
+
+            function hideLoadingAnimation() {
+                  const loadingElement = document.getElementById('app-loading');
+
+                  // 淡出加载动画
+                  loadingElement.style.opacity = '0';
+
+                  // 动画完成后移除加载元素并显示内容
+                  setTimeout(() => {
+                        loadingElement.style.display = 'none';
+                  }, 500);
+            }
+      </script>
 </body>
 
 </html>

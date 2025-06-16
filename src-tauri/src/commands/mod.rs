@@ -4,6 +4,7 @@ pub mod draft;
 pub mod envpath;
 pub mod greet;
 pub mod sqlx;
+pub mod config;
 
 // 导出所有命令函数
 pub use book::*;
@@ -11,6 +12,7 @@ pub use draft::*;
 pub use envpath::*;
 pub use greet::*;
 pub use sqlx::*;
+pub use config::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -33,6 +35,10 @@ macro_rules! register_commands {
             $crate::commands::env_path::get_exe_dir,
             $crate::commands::env_path::get_pictures_dir,
             $crate::commands::env_path::get_documents_dir,
+            $crate::commands::config::get_config,
+            $crate::commands::config::get_config_field,
+            $crate::commands::config::set_config_field,
+            $crate::commands::config::reset_config,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

@@ -1,18 +1,12 @@
-use crate::dto::{self, sql};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use crate::dto::{ self, sql };
+use chrono::{ DateTime, NaiveDateTime, Utc };
 use once_cell::sync::Lazy;
-use serde_json::{json, Value};
+use serde_json::{ json, Value };
 use sql::StringDB;
-use sqlx::{mysql::MySqlPool, Row};
+use sqlx::{ mysql::MySqlPool, Row };
 use std::process::Command;
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{BufWriter, Write},
-    process::Stdio,
-    sync::atomic::{AtomicBool, Ordering},
-    time::SystemTime,
-};
+use std::{ collections::HashMap, fs::File, io::{ BufWriter, Write }, process::Stdio, sync::atomic::{ AtomicBool, Ordering }, time::SystemTime };
+use log::info;
 use tauri::command;
 use tokio::sync::Mutex;
 // 定义一个全局的、可变且线程安全的数据库连接池
@@ -22,10 +16,8 @@ static TABLES_INITIALIZED: AtomicBool = std::sync::atomic::AtomicBool::new(false
 #[command]
 pub async fn connect_db(dbip: &str, username: &str, password: &str) -> Result<String, String> {
     let database_url = format!("mysql://{}:{}@{}:3306/mysql", username, password, dbip);
-    let pool = MySqlPool::connect(&database_url)
-        .await
-        .map_err(|e| e.to_string())?;
-    println!("database_url : {} ", database_url.to_string());
+    let pool = MySqlPool::connect(&database_url).await.map_err(|e| e.to_string())?;
+    info!("database_url : {} ", database_url.to_string());
     let res = pool.size() > 0;
     println!("conn => {:?}", res);
     {
@@ -43,9 +35,9 @@ pub async fn get_alldbname() -> Result<String, String> {
     match conn.as_ref() {
         Some(pool) => {
             let select_query = "SELECT schema_name AS 'name' FROM information_schema.schemata";
-            let data = sqlx::query_as::<_, StringDB>(select_query)
-                .fetch_all(pool)
-                .await
+            let data = sqlx
+                ::query_as::<_, StringDB>(select_query)
+                .fetch_all(pool).await
                 .map_err(|e| e.to_string())?;
 
             let res = serde_json::to_string(&data).map_err(|e| e.to_string())?;
@@ -60,9 +52,9 @@ pub async fn get_alltablenamebydbname(dbname: &str) -> Result<String, String> {
     match conn.as_ref() {
         Some(pool) => {
             let select_query = format!("SELECT table_name AS `name` FROM information_schema.tables WHERE table_schema =  '{}'", dbname);
-            let data = sqlx::query_as::<_, StringDB>(&select_query)
-                .fetch_all(pool)
-                .await
+            let data = sqlx
+                ::query_as::<_, StringDB>(&select_query)
+                .fetch_all(pool).await
                 .map_err(|e| e.to_string())?;
 
             let res = serde_json::to_string(&data).map_err(|e| e.to_string())?;
@@ -78,9 +70,9 @@ pub async fn get_table_columns(db_name: &str, table_name: &str) -> Result<String
     match conn.as_ref() {
         Some(pool) => {
             let columns_query = format!("SELECT COLUMN_NAME AS name, DATA_TYPE AS type FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'", db_name, table_name);
-            let rows = sqlx::query(&columns_query)
-                .fetch_all(pool)
-                .await
+            let rows = sqlx
+                ::query(&columns_query)
+                .fetch_all(pool).await
                 .map_err(|e| e.to_string())?;
 
             let mut columns = HashMap::new();
@@ -103,9 +95,9 @@ pub async fn execute_sql_command(sql: &str) -> Result<String, String> {
         Some(pool) => {
             // 执行 SQL 命令（注意：这里存在 SQL 注入的风险！）
             println!("execute_sql_command sql: {:?}", sql);
-            let rows_affected = sqlx::query(&sql)
-                .execute(pool)
-                .await
+            let rows_affected = sqlx
+                ::query(&sql)
+                .execute(pool).await
                 .map_err(|e| e.to_string())?;
             let num = rows_affected.rows_affected();
             // 根据影响的行数构建返回结果
@@ -122,9 +114,9 @@ pub async fn execute_dbtable_command(sql: &str) -> Result<String, String> {
     match conn.as_ref() {
         Some(pool) => {
             println!("execute_sql_command sql: {:?}", sql);
-            sqlx::query(&sql)
-                .execute(pool)
-                .await
+            sqlx
+                ::query(&sql)
+                .execute(pool).await
                 .map_err(|e| e.to_string())?;
             Ok("ok".to_string())
         }
@@ -133,11 +125,7 @@ pub async fn execute_dbtable_command(sql: &str) -> Result<String, String> {
 }
 
 #[command]
-pub async fn query_table_data(
-    db_name: &str,
-    table_name: &str,
-    sql: &str,
-) -> Result<String, String> {
+pub async fn query_table_data(db_name: &str, table_name: &str, sql: &str) -> Result<String, String> {
     println!("query start");
     let start = SystemTime::now();
 
@@ -148,9 +136,9 @@ pub async fn query_table_data(
     match conn.as_ref() {
         Some(pool) => {
             let columns_query = format!("SELECT COLUMN_NAME AS name, DATA_TYPE AS type FROM information_schema.columns WHERE table_schema = '{}' AND table_name = '{}'", db_name, table_name);
-            let rows = sqlx::query(&columns_query)
-                .fetch_all(pool)
-                .await
+            let rows = sqlx
+                ::query(&columns_query)
+                .fetch_all(pool).await
                 .map_err(|e| e.to_string())?;
 
             let mut index = 0;
@@ -182,9 +170,9 @@ pub async fn query_table_data(
                 new_sql.truncate(limit_pos);
             }
             println!("query count: {:?}", new_sql);
-            let count_result: i64 = sqlx::query(&new_sql)
-                .fetch_one(pool)
-                .await
+            let count_result: i64 = sqlx
+                ::query(&new_sql)
+                .fetch_one(pool).await
                 .map_err(|e| e.to_string())?
                 .get(0);
 
@@ -199,9 +187,9 @@ pub async fn query_table_data(
         Some(pool) => {
             let select_query = format!("{}", sql);
             println!("query sql: {:?}", sql);
-            let rows = sqlx::query(&select_query)
-                .fetch_all(pool)
-                .await
+            let rows = sqlx
+                ::query(&select_query)
+                .fetch_all(pool).await
                 .map_err(|err| err.to_string())?;
             if rows.is_empty() {
                 jsonres["data"] = jsondata;
@@ -217,12 +205,7 @@ pub async fn query_table_data(
                     for column in columns.as_array().unwrap() {
                         let c = column["type"].as_str().unwrap();
                         let n = column["name"].as_str().unwrap();
-                        if c.eq_ignore_ascii_case("int")
-                            || c.eq_ignore_ascii_case("integer")
-                            || c.eq_ignore_ascii_case("long")
-                            || c.eq_ignore_ascii_case("bigint")
-                            || c.eq_ignore_ascii_case("smallint")
-                        {
+                        if c.eq_ignore_ascii_case("int") || c.eq_ignore_ascii_case("integer") || c.eq_ignore_ascii_case("long") || c.eq_ignore_ascii_case("bigint") || c.eq_ignore_ascii_case("smallint") {
                             match row.try_get::<i64, _>(k) {
                                 Ok(value) => {
                                     json_obj[n] = json!(value.to_string());
@@ -231,11 +214,7 @@ pub async fn query_table_data(
                                     json_obj[n] = serde_json::Value::Null;
                                 }
                             }
-                        } else if c.eq_ignore_ascii_case("varchar")
-                            || c.eq_ignore_ascii_case("varstring")
-                            || c.eq_ignore_ascii_case("char")
-                            || c.eq_ignore_ascii_case("text")
-                        {
+                        } else if c.eq_ignore_ascii_case("varchar") || c.eq_ignore_ascii_case("varstring") || c.eq_ignore_ascii_case("char") || c.eq_ignore_ascii_case("text") {
                             match row.try_get::<String, usize>(k) {
                                 Ok(value) => {
                                     json_obj[n] = json!(&value.to_string());
@@ -255,12 +234,9 @@ pub async fn query_table_data(
                                     }
                                 }
                             }
-                        } else if c.eq_ignore_ascii_case("datetime")
-                            || c.eq_ignore_ascii_case("timestamp")
-                        {
+                        } else if c.eq_ignore_ascii_case("datetime") || c.eq_ignore_ascii_case("timestamp") {
                             // 通过索引获取 DateTime<Utc>
-                            let datetime_utc_by_index: Option<DateTime<Utc>> = match row.try_get(k)
-                            {
+                            let datetime_utc_by_index: Option<DateTime<Utc>> = match row.try_get(k) {
                                 Ok(dt) => Some(dt),
                                 Err(..) => None,
                             };
@@ -273,9 +249,7 @@ pub async fn query_table_data(
                             } else {
                                 json_obj[n] = serde_json::Value::Null;
                             }
-                        } else if c.eq_ignore_ascii_case("double")
-                            || c.eq_ignore_ascii_case("float")
-                        {
+                        } else if c.eq_ignore_ascii_case("double") || c.eq_ignore_ascii_case("float") {
                             match row.try_get::<f64, _>(k) {
                                 Ok(value) => {
                                     json_obj[n] = json!(value);
@@ -284,9 +258,7 @@ pub async fn query_table_data(
                                     json_obj[n] = serde_json::Value::Null;
                                 }
                             }
-                        } else if c.eq_ignore_ascii_case("varbinary")
-                            || c.eq_ignore_ascii_case("blob")
-                        {
+                        } else if c.eq_ignore_ascii_case("varbinary") || c.eq_ignore_ascii_case("blob") {
                             println!("c.eq_ignore_ascii_case(varbinary,blob)");
                             // let value: Vec<u8> = row.try_get::<Vec<u8>, usize>(
                             //     column["index"].as_usize().unwrap()
@@ -319,18 +291,9 @@ pub async fn query_table_data(
 }
 
 #[command]
-pub async fn backup_db_command(
-    username: &str,
-    password: &str,
-    dbname: &str,
-    filename: &str,
-) -> Result<String, String> {
+pub async fn backup_db_command(username: &str, password: &str, dbname: &str, filename: &str) -> Result<String, String> {
     let command = format!("mysqldump -u{} -p{} {}", username, password, dbname);
-    let shell = if cfg!(target_os = "windows") {
-        "cmd"
-    } else {
-        "sh"
-    };
+    let shell = if cfg!(target_os = "windows") { "cmd" } else { "sh" };
     let output = Command::new(shell)
         .arg(if shell == "cmd" { "/c" } else { "-c" })
         .arg(&command)
@@ -348,11 +311,7 @@ pub async fn backup_db_command(
 }
 
 pub fn run_command(command: &str) -> Result<String, String> {
-    let shell = if cfg!(target_os = "windows") {
-        "cmd"
-    } else {
-        "sh"
-    };
+    let shell = if cfg!(target_os = "windows") { "cmd" } else { "sh" };
     let output = Command::new(shell)
         .arg(if shell == "cmd" { "/c" } else { "-c" })
         .arg(command)
@@ -365,19 +324,8 @@ pub fn run_command(command: &str) -> Result<String, String> {
     }
 }
 #[command]
-pub async fn revert_db_command(
-    username: &str,
-    password: &str,
-    dbname: &str,
-    filename: &str,
-) -> Result<String, String> {
-    match run_command(
-        format!(
-            "mysql -u {} -p{} {} < {}",
-            username, password, dbname, filename
-        )
-        .as_str(),
-    ) {
+pub async fn revert_db_command(username: &str, password: &str, dbname: &str, filename: &str) -> Result<String, String> {
+    match run_command(format!("mysql -u {} -p{} {} < {}", username, password, dbname, filename).as_str()) {
         Ok(_) => println!("Revert DB"),
         Err(e) => {
             return Err(format!("Failed to Revert DB: {}", e));
@@ -402,29 +350,23 @@ pub async fn check_and_create_traft_db(dbname: &str) -> Result<String, String> {
         match conn.as_ref() {
             Some(pool) => {
                 // 创建数据库
-                let create_query = format!(
-                    "CREATE DATABASE IF NOT EXISTS `{}` 
+                let create_query = format!("CREATE DATABASE IF NOT EXISTS `{}` 
                     CHARACTER SET utf8mb4 
-                    COLLATE utf8mb4_general_ci",
-                    dbname
-                );
+                    COLLATE utf8mb4_general_ci", dbname);
 
-                sqlx::query(&create_query)
-                    .execute(pool)
-                    .await
+                sqlx
+                    ::query(&create_query)
+                    .execute(pool).await
                     .map_err(|e| e.to_string())?;
 
                 // 检查数据库是否存在
-                sqlx::query_scalar::<_, String>(
-                    "SELECT SCHEMA_NAME 
+                sqlx::query_scalar::<_, String>("SELECT SCHEMA_NAME 
                     FROM INFORMATION_SCHEMA.SCHEMATA 
-                    WHERE SCHEMA_NAME = ?",
-                )
-                .bind(dbname)
-                .fetch_optional(pool)
-                .await
-                .map_err(|e| e.to_string())?
-                .is_some()
+                    WHERE SCHEMA_NAME = ?")
+                    .bind(dbname)
+                    .fetch_optional(pool).await
+                    .map_err(|e| e.to_string())?
+                    .is_some()
             }
             None => {
                 println!("数据库连接未初始化");
@@ -442,14 +384,9 @@ pub async fn check_and_create_traft_db(dbname: &str) -> Result<String, String> {
 
     // 2. 创建新连接池（独立于之前的锁）
     // 注意：这里应该使用参数化配置，而不是硬编码！
-    let draft_db_url = format!(
-        "mysql://{}:{}@{}:3306/{}",
-        "sa", "Nanhui-380", "127.0.0.1", dbname
-    );
+    let draft_db_url = format!("mysql://{}:{}@{}:3306/{}", "sa", "Nanhui-380", "127.0.0.1", dbname);
 
-    let draft_pool = MySqlPool::connect(&draft_db_url)
-        .await
-        .map_err(|e| e.to_string())?;
+    let draft_pool = MySqlPool::connect(&draft_db_url).await.map_err(|e| e.to_string())?;
 
     // 3. 更新全局连接池（使用新的锁作用域）
     {
@@ -481,9 +418,7 @@ fn is_valid_dbname(dbname: &str) -> bool {
     }
 
     // 只允许字母、数字、下划线和短横线
-    dbname
-        .chars()
-        .all(|c| (c.is_ascii_alphanumeric() || c == '_' || c == '-'))
+    dbname.chars().all(|c| (c.is_ascii_alphanumeric() || c == '_' || c == '-'))
 }
 
 /// 内部函数：执行建表语句
@@ -497,11 +432,7 @@ async fn initialize_tables_internal() -> Result<(), String> {
     };
 
     // 定义所有建表语句
-    let create_table_sqls = vec![
-        dto::tablesql::USER_SQL,
-        dto::tablesql::BATCH_SQL,
-        dto::tablesql::BOOK_SQL,
-    ];
+    let create_table_sqls = vec![dto::tablesql::USER_SQL, dto::tablesql::BATCH_SQL, dto::tablesql::BOOK_SQL];
     println!("建表的数量: {:?}", create_table_sqls.len());
     // 逐条执行建表语句
     for sql in create_table_sqls {

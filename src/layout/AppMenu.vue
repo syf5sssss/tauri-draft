@@ -13,6 +13,7 @@ const model = ref([
         items: [
             { label: 'Print', icon: 'pi pi-fw pi-home', to: '/draft/print' },
             { label: 'OS', icon: 'pi pi-fw pi-home', to: '/draft/os' },
+            { label: 'Config', icon: 'pi pi-fw pi-home', to: '/draft/config' },
             { label: 'CRUD', icon: 'pi pi-fw pi-home', to: '/draft/crud' }
         ]
     },
