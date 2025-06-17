@@ -8,7 +8,6 @@
       <title>tauri-draft</title>
       <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet">
       <style>
-            /* 加载动画样式 */
             #app-loading {
                   position: fixed;
                   top: 0;
@@ -40,22 +39,6 @@
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }
 
-            .progress-bar {
-                  width: 200px;
-                  height: 6px;
-                  background: rgba(255, 255, 255, 0.1);
-                  border-radius: 3px;
-                  margin-top: 20px;
-                  overflow: hidden;
-            }
-
-            .progress {
-                  height: 100%;
-                  background: #4299e1;
-                  width: 0%;
-                  transition: width 0.3s ease;
-            }
-
             @keyframes spin {
                   0% {
                         transform: rotate(0deg);
@@ -83,19 +66,7 @@
       <script>
             // 监听页面加载完成事件
             window.addEventListener('DOMContentLoaded', () => {
-                  // 模拟加载进度
-                  let progress = 0;
-                  const progressBar = document.getElementById('loading-progress');
-                  const interval = setInterval(() => {
-                        progress += Math.random() * 10;
-                        progressBar.style.width = `${Math.min(progress, 100)}%`;
-
-                        if (progress >= 100) {
-                              clearInterval(interval);
-                              // 页面加载完成时隐藏加载动画
-                              hideLoadingAnimation();
-                        }
-                  }, 10);
+                  hideLoadingAnimation();
             });
 
             function hideLoadingAnimation() {

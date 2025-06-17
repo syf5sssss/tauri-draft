@@ -18,6 +18,7 @@ let AppConfig = ref({
     volume: Number,
     notifications: [],
     timeout: Number,
+    alarms: []
 });
 
 onMounted(async () => {
@@ -79,6 +80,14 @@ async function reset_config() {
   AppConfig.value = res;
   get_config();
 }
+
+async function set_alarm(){
+    const obj = { index: 3, name: "低电量", enname: "Low Power", level:1 };
+    const obj2 = { index: 4, name: "电机报错", enname: "Motor error", level:2 };
+    const arr = [obj,obj2];
+    await invoke('set_config_field',{field:"alarms",value:arr});
+    get_config();
+}
 </script>
 
 <template>
@@ -127,6 +136,7 @@ async function reset_config() {
 
   <Button @click="get_config" class="ml-4">获取当前配置</Button>
   <Button @click="reset_config" class="ml-2">恢复默认配置</Button>
+  <Button @click="set_alarm" class="ml-2">设置报警列表</Button>
 </template>
 
 <style>

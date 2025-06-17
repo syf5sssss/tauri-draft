@@ -1,4 +1,3 @@
-use log::info;
 use serde::{ Deserialize, Serialize };
 use tauri::path::BaseDirectory;
 use tauri::Manager;
@@ -15,6 +14,16 @@ pub struct AppConfig {
     pub volume: f64,
     pub notifications: Vec<String>,
     pub timeout: u32,
+    pub alarms: Vec<AlarmList>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(default)]
+pub struct AlarmList {
+    pub index: u32,
+    pub name: String,
+    pub enname: String,
+    pub level: u32,
 }
 
 impl Default for AppConfig {
@@ -27,6 +36,7 @@ impl Default for AppConfig {
             volume: 0.8,
             notifications: vec!["update".to_string(), "message".to_string()],
             timeout: 30,
+            alarms: vec![AlarmList { index: 1, name: "识别失败".to_string(), enname: "identification failed".to_string(), level: 0 }, AlarmList { index: 2, name: "通讯失败".to_string(), enname: "communication failure".to_string(), level: 1 }],
         }
     }
 }
