@@ -1,4 +1,5 @@
 use commands::{ connect_db, AppState };
+use dto::ThreadState;
 use tauri_plugin_autostart::MacosLauncher;
 
 pub mod commands;
@@ -81,8 +82,11 @@ fn rotate_logs(log_path: &PathBuf) -> io::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // let thread_state = Arc::new(ThreadState::default());
+
     tauri::Builder
         ::default()
+        .manage(ThreadState::default())
         .setup(|app| {
             let document_dir = app.path().document_dir();
             if let Ok(dir) = &document_dir {

@@ -14,6 +14,10 @@ const model = ref([
             { label: 'Print', icon: 'pi pi-fw pi-home', to: '/draft/print' },
             { label: 'OS', icon: 'pi pi-fw pi-home', to: '/draft/os' },
             { label: 'Config', icon: 'pi pi-fw pi-home', to: '/draft/config' },
+            { label: 'Thread', icon: 'pi pi-fw pi-home', to: '/draft/thread' },
+            { label: 'ListMap', icon: 'pi pi-fw pi-home', to: '/draft/listmap' },
+            { label: 'Socket', icon: 'pi pi-fw pi-home', to: '/draft/socket' },
+            { label: 'FileIO', icon: 'pi pi-fw pi-home', to: '/draft/fileio' },
             { label: 'CRUD', icon: 'pi pi-fw pi-home', to: '/draft/crud' }
         ]
     },

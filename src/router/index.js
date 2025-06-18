@@ -29,6 +29,26 @@ const router = createRouter({
                     component: () => import('@/views/draft/Config.vue')
                 },
                 {
+                    path: '/draft/thread',
+                    name: 'thread',
+                    component: () => import('@/views/draft/Thread.vue')
+                },
+                {
+                    path: '/draft/listmap',
+                    name: 'liatmap',
+                    component: () => import('@/views/draft/ListMap.vue')
+                },
+                {
+                    path: '/draft/socket',
+                    name: 'socket',
+                    component: () => import('@/views/draft/Socket.vue')
+                },
+                {
+                    path: '/draft/fileio',
+                    name: 'fileio',
+                    component: () => import('@/views/draft/File.vue')
+                },
+                {
                     path: '/draft/crud',
                     name: 'crud-form',
                     component: () => import('@/views/draft/CRUD.vue')

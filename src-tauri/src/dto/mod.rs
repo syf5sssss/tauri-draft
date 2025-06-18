@@ -8,3 +8,5 @@ pub mod page;
 pub use page::*;
 pub mod param;
 pub use param::*;
+pub mod statics;
+pub use statics::*;
