@@ -16,7 +16,27 @@ const model = ref([
             { label: 'Config', icon: 'pi pi-fw pi-home', to: '/draft/config' },
             { label: 'Thread', icon: 'pi pi-fw pi-home', to: '/draft/thread' },
             { label: 'ListMap', icon: 'pi pi-fw pi-home', to: '/draft/listmap' },
-            { label: 'Socket', icon: 'pi pi-fw pi-home', to: '/draft/socket' },
+            {
+                label: 'Socket',
+                icon: 'pi pi-fw pi-home',
+                items: [
+                    {
+                        label: 'TcpServer',
+                        icon: 'pi pi-fw pi-home',
+                        to: '/draft/socket/tcpserver'
+                    },
+                    {
+                        label: 'TcpClient',
+                        icon: 'pi pi-fw pi-home',
+                        to: '/draft/socket/tcpclient'
+                    },
+                    {
+                        label: 'UdpServer',
+                        icon: 'pi pi-fw pi-home',
+                        to: '/draft/socket/udpserver'
+                    }
+                ]
+            },
             { label: 'FileIO', icon: 'pi pi-fw pi-home', to: '/draft/fileio' },
             { label: 'CRUD', icon: 'pi pi-fw pi-home', to: '/draft/crud' }
         ]

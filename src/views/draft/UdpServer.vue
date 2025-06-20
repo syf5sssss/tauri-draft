@@ -50,19 +50,19 @@ listen('server_data', (event) => {
 listen('conn_add', (event) => {
   console.log('add --  ', event.payload);
   conns.value.push({ name: event.payload, value: event.payload });
-  console.log(conns.value);
+  toast.add({ severity: 'info', summary: 'Success', detail: "接入：" + event.payload, life: 3000 });
 });
 
 listen('conn_del', (event) => {
   console.log('del --  ', event.payload);
   conns.value = conns.value.filter(conn => conn.name !== event.payload);
-  console.log(conns.value);
+  toast.add({ severity: 'info', summary: 'Success', detail: "掉线：" + event.payload, life: 3000 });
 });
 </script>
 
 <template>
   <div class="card">
-    <p>Tcp Server</p>
+    <p>Udp Server</p>
     <p>{{ msg }}</p>
     <p>{{ data }}</p>
     <InputText v-model="ip" class="ml-2 mt-2 w-48" />

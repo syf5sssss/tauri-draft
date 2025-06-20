@@ -34,7 +34,7 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
     {
         let state = state.read().await;
         if state.running {
-            if let Err(e) = app_handle.emit("server_msg", "Server is already running") {
+            if let Err(e) = app_handle.emit("server_msg", "服务已运行") {
                 eprintln!("Failed to emit event: {}", e);
             }
             return Err("Server is already running".into());
@@ -48,7 +48,7 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
     let (tx, _) = broadcast::channel(100);
     let tx = Arc::new(tx);
     let listener = TcpListener::bind(&constr).await.map_err(|e| {
-        if let Err(ea) = app_handle.emit("server_msg", format!("Failed to bind to {}: {}", constr, e)) {
+        if let Err(ea) = app_handle.emit("server_msg", format!("绑定失败 {}: {}", constr, e)) {
             eprintln!("Failed to emit event: {}", ea);
         }
         format!("Failed to bind to {}: {}", constr, e)
@@ -82,10 +82,10 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
                 .unwrap()
         };
 
-        if let Err(ea) = app_handle.emit("server_msg", format!("{}", "Server listener")) {
+        if let Err(ea) = app_handle.emit("server_msg", format!("{}", "服务已开启")) {
             eprintln!("Failed to emit event: {}", ea);
         }
-        server_main_loop(app_handle.clone(), tx_clone, clients_clone, listener, shutdown_rx).await;
+        server_main_loop(app_handle, tx_clone, clients_clone, listener, shutdown_rx).await;
 
         // 服务器停止后更新状态
         let mut state = state_clone.write().await;
@@ -93,9 +93,6 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
         state.tx = None;
         state.shutdown_tx = None;
         println!("Server stopped");
-        if let Err(e) = app_handle.emit("server_msg", "Server stopped") {
-            eprintln!("Failed to emit event: {}", e);
-        }
     });
 
     Ok(())
@@ -138,9 +135,6 @@ async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<Strin
                     Ok((stream, addr)) => {
                         println!("New client connected: {}", addr);
                         let app_handle_clone = app_handle.clone();
-                        if let Err(e) = app_handle_clone.clone().emit("server_msg", format!("New client connected: {}", addr)) {
-                            eprintln!("Failed to emit event: {}", e);
-                        }
                         if let Err(e) = app_handle_clone.emit("conn_add", format!("{}", addr)) {
                             eprintln!("Failed to emit event: {}", e);
                         }
@@ -316,7 +310,6 @@ async fn handle_client(
     // 创建一个缓冲区用于累积数据
     let mut buffer = Vec::new();
     // 启动一个任务处理来自服务器的消息
-    let writer_app_handle = app_handle.clone();
     let writer_task = tokio::spawn(async move {
         // println!("Starting writer task for client {}", addr);
         loop {
@@ -333,9 +326,6 @@ async fn handle_client(
 
                             println!("Sending broadcast message to client {}: {}", addr, msg.trim_end_matches("\r\n"));
 
-                            if let Err(e) = writer_app_handle.emit("server_data", format!("{}", msg)) {
-                                eprintln!("Failed to emit event: {}", e);
-                            }
                             // 发送消息到客户端
                             if let Err(e) = writer.write_all(msg.as_bytes()).await {
                                 eprintln!("Error sending to {}: {}", addr, e);
@@ -364,9 +354,6 @@ async fn handle_client(
 
                             println!("Sending private message to client {}: {}", addr, msg.trim_end_matches("\r\n"));
 
-                            if let Err(e) = writer_app_handle.emit("server_data", format!("{}", msg)) {
-                                eprintln!("Failed to emit event: {}", e);
-                            }
                             // 发送消息到客户端
                             if let Err(e) = writer.write_all(msg.as_bytes()).await {
                                 eprintln!("Error sending to {}: {}", addr, e);
@@ -385,11 +372,9 @@ async fn handle_client(
                 }
             }
         }
-        // println!("Writer task for client {} completed", addr);
     });
 
     // 主循环：读取客户端数据
-    // println!("Starting reader loop for client {}", addr);
     loop {
         // 定义读取缓冲区
         let mut buf = vec![0; 1024];
@@ -398,9 +383,6 @@ async fn handle_client(
             Ok(0) => {
                 // 客户端关闭连接
                 println!("Client {} disconnected", addr);
-                if let Err(e) = app_handle.emit("server_msg", format!("Client {} disconnected", addr)) {
-                    eprintln!("Failed to emit event: {}", e);
-                }
                 if let Err(e) = app_handle.emit("conn_del", format!("{}", addr)) {
                     eprintln!("Failed to emit event: {}", e);
                 }
@@ -466,6 +448,34 @@ async fn handle_client(
 
     println!("Client {} fully disconnected", addr);
     drop(writer_task);
+}
+
+#[tauri::command]
+pub async fn get_connstr(state: State<'_, Arc<RwLock<TcpServerState>>>) -> Result<String, String> {
+    // 获取状态
+    let state_guard = state.read().await;
+
+    // 检查服务器是否在运行
+    if !state_guard.running {
+        return Err("Server is not running".into());
+    }
+
+    // 获取客户端映射
+    let clients = state_guard.clients.read().await;
+
+    // 如果没有客户端连接，返回空字符串
+    if clients.is_empty() {
+        return Ok(String::new());
+    }
+
+    // 提取所有客户端地址并转换为字符串
+    let addresses: Vec<String> = clients
+        .keys()
+        .map(|addr| addr.to_string())
+        .collect();
+
+    // 用逗号分隔连接地址
+    Ok(addresses.join(","))
 }
 
 // 查找消息分隔符 \r\n 的位置

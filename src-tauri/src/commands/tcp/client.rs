@@ -1,107 +1,92 @@
-use tauri::{ command, State, AppHandle };
+use tauri::{ command, State, AppHandle, Emitter };
 use tokio::net::TcpStream;
 use tokio::io::{ AsyncReadExt, AsyncWriteExt, BufReader };
 use tokio::sync::{ Mutex, mpsc };
-use serde_json::{ Value, json };
+use serde_json::Value;
 use std::sync::Arc;
-use std::time::Duration;
+use crate::commands::find_delimiter;
 
 // 客户端状态
-struct TcpClient {
-    stream: Mutex<Option<(TcpStream, BufReader<TcpStream>)>>,
-    tx: Mutex<Option<mpsc::Sender<String>>>,
+#[derive(Clone)]
+pub struct TcpClientState {
+    tx: Arc<Mutex<Option<mpsc::Sender<String>>>>,
 }
 
-impl Default for TcpClient {
+impl Default for TcpClientState {
     fn default() -> Self {
         Self {
-            stream: Mutex::new(None),
-            tx: Mutex::new(None),
+            tx: Arc::new(Mutex::new(None)),
         }
     }
 }
 
 #[command]
-pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClient>, address: String) -> Result<(), String> {
+pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClientState>, address: String) -> Result<(), String> {
     // 检查是否已连接
-    let stream_guard = client.stream.lock().await;
-    if stream_guard.is_some() {
-        return Err("Already connected".into());
+    {
+        let tx_guard = client.tx.lock().await;
+        if tx_guard.is_some() {
+            let _ = app_handle.emit("client_msg", format!("已成功连接"));
+            return Err("Already connected".into());
+        }
     }
-    drop(stream_guard); // 释放锁
 
     // 连接到服务器
-    let stream = TcpStream::connect(&address).await.map_err(|e| format!("Connection failed: {}", e))?;
+    let stream = TcpStream::connect(&address).await.map_err(|e| {
+        let _ = app_handle.emit("client_msg", format!("连接失败: {}", e));
+        format!("Connection failed: {}", e)
+    })?;
 
-    // 设置非阻塞模式
     stream.set_nodelay(true).map_err(|e| format!("Failed to set nodelay: {}", e))?;
 
-    // 创建读写分离的流
-    let reader = BufReader::new(stream.try_clone().map_err(|e| format!("Failed to clone stream: {}", e))?);
+    let _ = app_handle.emit("client_msg", "连接成功");
+
+    // 分离读写
+    let (read_half, write_half) = stream.into_split();
+    let mut reader = BufReader::new(read_half);
 
     // 创建通道用于发送消息
     let (tx, mut rx) = mpsc::channel(100);
 
     // 更新客户端状态
     {
-        let mut stream_guard = client.stream.lock().await;
-        *stream_guard = Some((stream, reader));
-
         let mut tx_guard = client.tx.lock().await;
         *tx_guard = Some(tx.clone());
     }
 
     // 启动发送任务
-    let app_handle_clone = app_handle.clone();
     tokio::spawn(async move {
+        let mut writer = write_half;
         while let Some(message) = rx.recv().await {
-            let mut stream_guard = client.stream.lock().await;
-            if let Some((stream, _)) = &mut *stream_guard {
-                // 发送消息
-                if let Err(e) = stream.write_all(message.as_bytes()).await {
-                    eprintln!("Error sending message: {}", e);
-                    // 发送断开连接事件
-                    let _ = app_handle_clone.emit("disconnected", ());
-                    break;
-                }
+            // 发送消息
+            if let Err(e) = writer.write_all(message.as_bytes()).await {
+                eprintln!("Error sending message: {}", e);
+                break;
+            }
 
-                // 发送分隔符
-                if let Err(e) = stream.write_all(b"\r\n").await {
-                    eprintln!("Error sending delimiter: {}", e);
-                    // 发送断开连接事件
-                    let _ = app_handle_clone.emit("disconnected", ());
-                    break;
-                }
-            } else {
+            // 发送分隔符
+            if let Err(e) = writer.write_all(b"\r\n").await {
+                eprintln!("Error sending delimiter: {}", e);
                 break;
             }
         }
     });
 
     // 启动接收任务
-    let app_handle_clone = app_handle.clone();
+    let client_state = client.inner().clone();
     tokio::spawn(async move {
         let mut buffer = Vec::new();
 
         loop {
-            let mut stream_guard = client.stream.lock().await;
-            let (_, reader) = match &mut *stream_guard {
-                Some((_, reader)) => reader,
-                None => {
-                    break;
-                }
-            };
-
-            // 读取数据
             let mut buf = vec![0; 1024];
             match reader.read(&mut buf).await {
-                Ok(n) if n == 0 => {
+                Ok(0) => {
                     // 连接关闭
                     eprintln!("Connection closed by server");
+                    let _ = app_handle.emit("client_msg", "连接已关闭");
                     break;
                 }
                 Ok(n) => {
-                    // 将读取的数据追加到缓冲区
                     buffer.extend_from_slice(&buf[0..n]);
 
                     // 处理所有完整的消息
@@ -116,15 +101,11 @@ pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClie
                         match serde_json::from_str::<Value>(&message) {
                             Ok(json_data) => {
                                 // 发送消息到前端
-                                let _ = app_handle_clone.emit("message_received", json_data);
+                                println!("received message: {}", json_data);
+                                let _ = app_handle.emit("client_data", json_data);
                             }
                             Err(e) => {
                                 eprintln!("Failed to parse JSON: {}", e);
-                                let error_response = json!({
-                                    "error": "Invalid JSON received",
-                                    "details": e.to_string()
-                                });
-                                let _ = app_handle_clone.emit("message_received", error_response);
                             }
                         }
                     }
@@ -138,36 +119,26 @@ pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClie
 
         // 清理连接
         {
-            let mut stream_guard = client.stream.lock().await;
-            *stream_guard = None;
-
-            let mut tx_guard = client.tx.lock().await;
+            let mut tx_guard = client_state.tx.lock().await;
             *tx_guard = None;
         }
-
-        // 发送断开连接事件
-        let _ = app_handle_clone.emit("disconnected", ());
     });
 
     Ok(())
 }
 
 #[command]
-pub async fn disconnect(client: State<'_, TcpClient>) -> Result<(), String> {
+pub async fn disconnect(client: State<'_, TcpClientState>) -> Result<(), String> {
     // 清理连接
     {
-        let mut stream_guard = client.stream.lock().await;
-        *stream_guard = None;
-
         let mut tx_guard = client.tx.lock().await;
         *tx_guard = None;
     }
-
     Ok(())
 }
 
 #[command]
-pub async fn send_message(client: State<'_, TcpClient>, message: String) -> Result<(), String> {
+pub async fn send_message(client: State<'_, TcpClientState>, message: String) -> Result<(), String> {
     // 验证JSON格式
     let _: Value = serde_json::from_str(&message).map_err(|e| format!("Invalid JSON: {}", e))?;
 
@@ -179,21 +150,3 @@ pub async fn send_message(client: State<'_, TcpClient>, message: String) -> Resu
 
     Ok(())
 }
-
-// 查找消息分隔符 \r\n 的位置
-pub fn find_delimiter(buffer: &[u8]) -> Option<usize> {
-    for i in 0..buffer.len() - 1 {
-        if buffer[i] == b'\r' && buffer[i + 1] == b'\n' {
-            return Some(i);
-        }
-    }
-    None
-}
-
-// fn main() {
-//     tauri::Builder::default()
-//         .manage(TcpClient::default())
-//         .invoke_handler(tauri::generate_handler![connect, disconnect, send_message])
-//         .run(tauri::generate_context!())
-//         .expect("error while running tauri application");
-// }

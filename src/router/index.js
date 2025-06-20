@@ -39,9 +39,19 @@ const router = createRouter({
                     component: () => import('@/views/draft/ListMap.vue')
                 },
                 {
-                    path: '/draft/socket',
-                    name: 'socket',
-                    component: () => import('@/views/draft/Socket.vue')
+                    path: '/draft/socket/tcpserver',
+                    name: 'tcpserver',
+                    component: () => import('@/views/draft/TcpServer.vue')
+                },
+                {
+                    path: '/draft/socket/tcpclient',
+                    name: 'tcpclient',
+                    component: () => import('@/views/draft/TcpClient.vue')
+                },
+                {
+                    path: '/draft/socket/udpserver',
+                    name: 'udpserver',
+                    component: () => import('@/views/draft/UdpServer.vue')
                 },
                 {
                     path: '/draft/fileio',
