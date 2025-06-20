@@ -52,6 +52,7 @@ listen('conn_add', (event) => {
   conns.value.push({ name: event.payload, value: event.payload });
   console.log(conns.value);
 });
+
 listen('conn_del', (event) => {
   console.log('del --  ', event.payload);
   conns.value = conns.value.filter(conn => conn.name !== event.payload);
