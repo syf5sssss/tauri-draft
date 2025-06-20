@@ -1,4 +1,4 @@
-use commands::{ connect_db, AppState };
+use commands::{ connect_db, AppState, TcpServerState };
 use dto::ThreadState;
 use tauri_plugin_autostart::MacosLauncher;
 
@@ -7,6 +7,7 @@ pub mod dao;
 pub mod dto;
 pub mod util;
 use log::info;
+use tokio::sync::RwLock;
 use util::AppConfig;
 use std::{ fs::{ self, OpenOptions }, io, path::PathBuf };
 use std::path::Path;
@@ -82,11 +83,10 @@ fn rotate_logs(log_path: &PathBuf) -> io::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // let thread_state = Arc::new(ThreadState::default());
-
     tauri::Builder
         ::default()
         .manage(ThreadState::default())
+        .manage(Arc::new(RwLock::new(TcpServerState::default())))
         .setup(|app| {
             let document_dir = app.path().document_dir();
             if let Ok(dir) = &document_dir {

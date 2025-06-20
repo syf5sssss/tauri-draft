@@ -6,6 +6,7 @@ pub mod greet;
 pub mod sqlx;
 pub mod config;
 pub mod thread;
+pub mod tcp;
 
 // 导出所有命令函数
 pub use book::*;
@@ -15,6 +16,7 @@ pub use greet::*;
 pub use sqlx::*;
 pub use config::*;
 pub use thread::*;
+pub use tcp::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -49,6 +51,10 @@ macro_rules! register_commands {
             $crate::commands::thread::set_shared_value,
             $crate::commands::thread::get_last_update,
             $crate::commands::thread::progress_update,
+            $crate::commands::tcp::start_tcp_server,
+            $crate::commands::tcp::stop_tcp_server,
+            $crate::commands::tcp::send_to_clients,
+            $crate::commands::tcp::send_to_client,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,
