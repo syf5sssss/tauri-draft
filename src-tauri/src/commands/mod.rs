@@ -7,6 +7,7 @@ pub mod sqlx;
 pub mod config;
 pub mod thread;
 pub mod tcp;
+pub mod udp;
 
 // 导出所有命令函数
 pub use book::*;
@@ -17,6 +18,7 @@ pub use sqlx::*;
 pub use config::*;
 pub use thread::*;
 pub use tcp::*;
+pub use udp::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -59,6 +61,13 @@ macro_rules! register_commands {
             $crate::commands::tcp::tcp_client_connect,
             $crate::commands::tcp::disconnect,
             $crate::commands::tcp::send_message,
+            $crate::commands::udp::open_broadcast_service,
+            $crate::commands::udp::close_broadcast_service,
+            $crate::commands::udp::send_broadcast_message,
+            $crate::commands::udp::open_udp_service,
+            $crate::commands::udp::close_udp_service,
+            $crate::commands::udp::send_udp_message,
+            $crate::commands::udp::send_multicast_message,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

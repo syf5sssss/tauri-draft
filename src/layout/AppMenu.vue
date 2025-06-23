@@ -31,9 +31,15 @@ const model = ref([
                         to: '/draft/socket/tcpclient'
                     },
                     {
-                        label: 'UdpServer',
+                        label: 'UdpBroadCaster',
                         icon: 'pi pi-fw pi-home',
-                        to: '/draft/socket/udpserver'
+                        to: '/draft/socket/udpbroadcaster'
+                    }
+                    ,
+                    {
+                        label: 'UdpMultiCast',
+                        icon: 'pi pi-fw pi-home',
+                        to: '/draft/socket/udpmulticast'
                     }
                 ]
             },

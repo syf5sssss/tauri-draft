@@ -38,13 +38,11 @@ async function disconn() {
 }
 
 async function flush() {
-  console.log("刷新");
   let cos = await invoke('get_connstr');
-  console.log(cos);
   conns.value = [{ name: 'All', key: '' }];
-  if(cos && cos.length>0){
+  if (cos && cos.length > 0) {
     let srr = cos.split(",");
-    for(let i=0;i<srr.length;i++){
+    for (let i = 0; i < srr.length; i++) {
       conns.value.push({ name: srr[i], value: srr[i] });
     }
   }
@@ -57,18 +55,15 @@ listen('server_msg', (event) => {
 });
 
 listen('server_data', (event) => {
-  console.log(event.payload);
   data.value = event.payload;
 });
 
 listen('conn_add', (event) => {
-  console.log('add --  ', event.payload);
   conns.value.push({ name: event.payload, value: event.payload });
   toast.add({ severity: 'info', summary: 'Success', detail: "接入：" + event.payload, life: 3000 });
 });
 
 listen('conn_del', (event) => {
-  console.log('del --  ', event.payload);
   conns.value = conns.value.filter(conn => conn.name !== event.payload);
   toast.add({ severity: 'info', summary: 'Success', detail: "掉线：" + event.payload, life: 3000 });
 });

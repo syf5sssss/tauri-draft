@@ -49,9 +49,14 @@ const router = createRouter({
                     component: () => import('@/views/draft/TcpClient.vue')
                 },
                 {
-                    path: '/draft/socket/udpserver',
-                    name: 'udpserver',
-                    component: () => import('@/views/draft/UdpServer.vue')
+                    path: '/draft/socket/udpbroadcaster',
+                    name: 'udpbroadcaster',
+                    component: () => import('@/views/draft/UdpBroadCaster.vue')
+                },
+                {
+                    path: '/draft/socket/udpmulticast',
+                    name: 'udpmulticast',
+                    component: () => import('@/views/draft/UdpMultiCast.vue')
                 },
                 {
                     path: '/draft/fileio',
