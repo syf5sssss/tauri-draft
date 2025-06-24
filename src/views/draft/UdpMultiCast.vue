@@ -13,11 +13,11 @@ let target_port = ref(9998);
 let multicast_addr = ref("232.252.252.252");
 
 async function conn() {
-  await invoke('open_udp_service', { addr: ip.value + ":" + port.value, multicastAddr: multicast_addr.value });
+  await invoke('open_udp_service', { addr: ip.value + ":" + parseInt(port.value), multicastAddr: multicast_addr.value });
 }
 
 async function send_client() {
-  await invoke('send_udp_message', { message: str.value, targetAddr: multicast_addr.value + ":" + target_port.value });
+  await invoke('send_udp_message', { message: str.value, targetAddr: multicast_addr.value + ":" + parseInt(target_port.value) });
 }
 
 async function disconn() {

@@ -22,7 +22,7 @@ const conns = ref([
 ]);
 
 async function conn() {
-  await invoke('start_tcp_server', { ip: ip.value, port: port.value });
+  await invoke('start_tcp_server', { ip: ip.value, port: parseInt(port.value) });
 }
 
 async function send_client() {

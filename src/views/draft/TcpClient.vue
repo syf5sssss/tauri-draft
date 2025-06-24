@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event'
 import { useToast } from 'primevue/usetoast';
@@ -12,16 +12,8 @@ let str = ref("");
 let ip = ref("127.0.0.1");
 let port = ref(9999);
 
-onMounted(() => {
-
-});
-
-const conns = ref([
-  { name: 'All', key: '' },
-]);
-
 async function conn() {
-  await invoke('tcp_client_connect', { address: ip.value+":"+port.value });
+  await invoke('tcp_client_connect', { address: ip.value + ":" + parseInt(port.value) });
 }
 
 async function send() {
