@@ -8,6 +8,7 @@ pub mod config;
 pub mod thread;
 pub mod tcp;
 pub mod udp;
+pub mod fileio;
 
 // 导出所有命令函数
 pub use book::*;
@@ -19,6 +20,7 @@ pub use config::*;
 pub use thread::*;
 pub use tcp::*;
 pub use udp::*;
+pub use fileio::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -68,6 +70,13 @@ macro_rules! register_commands {
             $crate::commands::udp::close_udp_service,
             $crate::commands::udp::send_udp_message,
             $crate::commands::udp::send_multicast_message,
+            $crate::commands::fileio::rename_entries,
+            $crate::commands::fileio::delete_entries,
+            $crate::commands::fileio::create_entry,
+            $crate::commands::fileio::get_directory_info,
+            $crate::commands::fileio::delete_empty_directories,
+            $crate::commands::fileio::open_entry_location,
+            $crate::commands::fileio::move_entries,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,
