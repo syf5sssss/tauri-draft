@@ -1,4 +1,4 @@
-use commands::{ connect_db, AppState, BroadcastState, MulticastState, TcpClientState, TcpServerState };
+use commands::{ connect_db, AppState, BroadcastState, MulticastState, StudentMap, TcpClientState, TcpServerState, TeacherList };
 use dto::ThreadState;
 use tauri_plugin_autostart::MacosLauncher;
 
@@ -88,6 +88,8 @@ pub fn run() {
         .manage(TcpClientState::default())
         .manage(MulticastState::default())
         .manage(BroadcastState::default())
+        .manage(Mutex::new(StudentMap::new()))
+        .manage(Mutex::new(TeacherList::new()))
         .manage(ThreadState::default())
         .manage(Arc::new(RwLock::new(TcpServerState::default())))
         .setup(|app| {

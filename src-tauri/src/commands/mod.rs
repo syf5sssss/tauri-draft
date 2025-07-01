@@ -1,4 +1,3 @@
-// src/commands/mod.rs
 pub mod book;
 pub mod draft;
 pub mod envpath;
@@ -9,6 +8,7 @@ pub mod thread;
 pub mod tcp;
 pub mod udp;
 pub mod fileio;
+pub mod listmap;
 
 // 导出所有命令函数
 pub use book::*;
@@ -21,6 +21,7 @@ pub use thread::*;
 pub use tcp::*;
 pub use udp::*;
 pub use fileio::*;
+pub use listmap::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -77,6 +78,18 @@ macro_rules! register_commands {
             $crate::commands::fileio::delete_empty_directories,
             $crate::commands::fileio::open_entry_location,
             $crate::commands::fileio::move_entries,
+            $crate::commands::listmap::init_students,
+            $crate::commands::listmap::add_student,
+            $crate::commands::listmap::delete_student,
+            $crate::commands::listmap::update_student,
+            $crate::commands::listmap::query_students,
+            $crate::commands::listmap::get_student,
+            $crate::commands::listmap::init_teachers,
+            $crate::commands::listmap::add_teacher,
+            $crate::commands::listmap::delete_teacher,
+            $crate::commands::listmap::update_teacher,
+            $crate::commands::listmap::query_teachers,
+            $crate::commands::listmap::get_teacher,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

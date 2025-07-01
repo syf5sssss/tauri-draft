@@ -15,7 +15,8 @@ const model = ref([
             { label: 'OS', icon: 'pi pi-fw pi-home', to: '/draft/os' },
             { label: 'Config', icon: 'pi pi-fw pi-home', to: '/draft/config' },
             { label: 'Thread', icon: 'pi pi-fw pi-home', to: '/draft/thread' },
-            { label: 'ListMap', icon: 'pi pi-fw pi-home', to: '/draft/listmap' },
+            { label: 'HashMap', icon: 'pi pi-fw pi-home', to: '/draft/hashmap' },
+            { label: 'Vec', icon: 'pi pi-fw pi-home', to: '/draft/vec' },
             {
                 label: 'Socket',
                 icon: 'pi pi-fw pi-home',

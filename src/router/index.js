@@ -34,9 +34,14 @@ const router = createRouter({
                     component: () => import('@/views/draft/Thread.vue')
                 },
                 {
-                    path: '/draft/listmap',
-                    name: 'liatmap',
-                    component: () => import('@/views/draft/ListMap.vue')
+                    path: '/draft/hashmap',
+                    name: 'hashmap',
+                    component: () => import('@/views/draft/HashMap.vue')
+                },
+                {
+                    path: '/draft/vec',
+                    name: 'vec',
+                    component: () => import('@/views/draft/Vec.vue')
                 },
                 {
                     path: '/draft/socket/tcpserver',
