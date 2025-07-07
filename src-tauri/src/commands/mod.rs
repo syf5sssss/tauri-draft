@@ -9,6 +9,7 @@ pub mod tcp;
 pub mod udp;
 pub mod fileio;
 pub mod listmap;
+pub mod popula;
 
 // 导出所有命令函数
 pub use book::*;
@@ -22,6 +23,7 @@ pub use tcp::*;
 pub use udp::*;
 pub use fileio::*;
 pub use listmap::*;
+pub use popula::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -90,6 +92,7 @@ macro_rules! register_commands {
             $crate::commands::listmap::update_teacher,
             $crate::commands::listmap::query_teachers,
             $crate::commands::listmap::get_teacher,
+            $crate::commands::popula::popula_list,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

@@ -16,3 +16,5 @@ pub mod parse;
 pub use parse::*;
 pub mod teacher;
 pub use teacher::*;
+pub mod popula;
+pub use popula::*;

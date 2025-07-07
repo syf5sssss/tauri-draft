@@ -44,6 +44,11 @@ const router = createRouter({
                     component: () => import('@/views/draft/Vec.vue')
                 },
                 {
+                    path: '/draft/structure',
+                    name: 'structure',
+                    component: () => import('@/views/draft/PopulaStructure.vue')
+                },
+                {
                     path: '/draft/socket/tcpserver',
                     name: 'tcpserver',
                     component: () => import('@/views/draft/TcpServer.vue')
