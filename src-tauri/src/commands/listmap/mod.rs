@@ -1,7 +1,7 @@
 use crate::dto::Student;
 use crate::dto::Teacher;
-use chrono::{ Local, NaiveDateTime };
-use std::{ collections::HashMap, sync::Mutex };
+use chrono::{Local, NaiveDateTime};
+use std::{collections::HashMap, sync::Mutex};
 use tauri::State;
 
 // 类型别名简化状态管理
@@ -31,7 +31,13 @@ pub fn init_students(state: State<Mutex<StudentMap>>) {
 
 // 添加学生
 #[tauri::command]
-pub fn add_student(state: State<Mutex<StudentMap>>, name: String, age: i32, height: f64, birthday: NaiveDateTime) -> Option<Student> {
+pub fn add_student(
+    state: State<Mutex<StudentMap>>,
+    name: String,
+    age: i32,
+    height: f64,
+    birthday: NaiveDateTime,
+) -> Option<Student> {
     let mut state_lock = state.lock().unwrap();
 
     // 生成新ID
@@ -58,7 +64,14 @@ pub fn delete_student(state: State<Mutex<StudentMap>>, id: i32) -> bool {
 
 // 更新学生
 #[tauri::command]
-pub fn update_student(state: State<Mutex<StudentMap>>, id: i32, name: Option<String>, age: Option<i32>, height: Option<f64>, birthday: Option<NaiveDateTime>) -> Option<Student> {
+pub fn update_student(
+    state: State<Mutex<StudentMap>>,
+    id: i32,
+    name: Option<String>,
+    age: Option<i32>,
+    height: Option<f64>,
+    birthday: Option<NaiveDateTime>,
+) -> Option<Student> {
     let mut state_lock = state.lock().unwrap();
 
     if let Some(student) = state_lock.get_mut(&id) {
@@ -82,7 +95,14 @@ pub fn update_student(state: State<Mutex<StudentMap>>, id: i32, name: Option<Str
 
 // 查询学生（支持多种条件）
 #[tauri::command]
-pub fn query_students(state: State<Mutex<StudentMap>>, name_filter: Option<String>, age_min: Option<i32>, age_max: Option<i32>, birthday_start: Option<NaiveDateTime>, birthday_end: Option<NaiveDateTime>) -> Vec<Student> {
+pub fn query_students(
+    state: State<Mutex<StudentMap>>,
+    name_filter: Option<String>,
+    age_min: Option<i32>,
+    age_max: Option<i32>,
+    birthday_start: Option<NaiveDateTime>,
+    birthday_end: Option<NaiveDateTime>,
+) -> Vec<Student> {
     let state_lock = state.lock().unwrap();
     state_lock
         .values()
@@ -153,16 +173,17 @@ pub fn init_teachers(state: State<Mutex<TeacherList>>) {
 
 // 添加教师
 #[tauri::command]
-pub fn add_teacher(state: State<Mutex<TeacherList>>, name: String, age: i32, height: f64, birthday: NaiveDateTime) -> Option<Teacher> {
+pub fn add_teacher(
+    state: State<Mutex<TeacherList>>,
+    name: String,
+    age: i32,
+    height: f64,
+    birthday: NaiveDateTime,
+) -> Option<Teacher> {
     let mut state_lock = state.lock().unwrap();
 
     // 生成新ID (当前最大ID + 1)
-    let new_id =
-        state_lock
-            .iter()
-            .map(|t| t.id)
-            .max()
-            .unwrap_or(0) + 1;
+    let new_id = state_lock.iter().map(|t| t.id).max().unwrap_or(0) + 1;
 
     let teacher = Teacher {
         id: new_id,
@@ -191,7 +212,14 @@ pub fn delete_teacher(state: State<Mutex<TeacherList>>, id: i32) -> bool {
 
 // 更新教师
 #[tauri::command]
-pub fn update_teacher(state: State<Mutex<TeacherList>>, id: i32, name: Option<String>, age: Option<i32>, height: Option<f64>, birthday: Option<NaiveDateTime>) -> Option<Teacher> {
+pub fn update_teacher(
+    state: State<Mutex<TeacherList>>,
+    id: i32,
+    name: Option<String>,
+    age: Option<i32>,
+    height: Option<f64>,
+    birthday: Option<NaiveDateTime>,
+) -> Option<Teacher> {
     let mut state_lock = state.lock().unwrap();
 
     if let Some(teacher) = state_lock.iter_mut().find(|t| t.id == id) {
@@ -215,7 +243,14 @@ pub fn update_teacher(state: State<Mutex<TeacherList>>, id: i32, name: Option<St
 
 // 查询教师（支持多种条件）
 #[tauri::command]
-pub fn query_teachers(state: State<Mutex<TeacherList>>, name_filter: Option<String>, age_min: Option<i32>, age_max: Option<i32>, birthday_start: Option<NaiveDateTime>, birthday_end: Option<NaiveDateTime>) -> Vec<Teacher> {
+pub fn query_teachers(
+    state: State<Mutex<TeacherList>>,
+    name_filter: Option<String>,
+    age_min: Option<i32>,
+    age_max: Option<i32>,
+    birthday_start: Option<NaiveDateTime>,
+    birthday_end: Option<NaiveDateTime>,
+) -> Vec<Teacher> {
     let state_lock = state.lock().unwrap();
     state_lock
         .iter()
@@ -261,8 +296,5 @@ pub fn query_teachers(state: State<Mutex<TeacherList>>, name_filter: Option<Stri
 #[tauri::command]
 pub fn get_teacher(state: State<Mutex<TeacherList>>, id: i32) -> Option<Teacher> {
     let state_lock = state.lock().unwrap();
-    state_lock
-        .iter()
-        .find(|t| t.id == id)
-        .cloned()
+    state_lock.iter().find(|t| t.id == id).cloned()
 }

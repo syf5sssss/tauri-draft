@@ -1,6 +1,6 @@
 // src/commands/greet/mod.rs
+use log::{info, trace, warn};
 use tauri::command;
-use log::{ info, trace, warn };
 
 #[command]
 pub fn greet(name: &str) -> String {

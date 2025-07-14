@@ -1,4 +1,4 @@
-use std::sync::{ Arc, Mutex };
+use std::sync::{Arc, Mutex};
 use tauri::State;
 
 use crate::util::AppConfig;
@@ -15,7 +15,10 @@ pub fn get_config(state: State<AppState>) -> Result<AppConfig, String> {
 }
 
 #[tauri::command]
-pub fn get_config_field(field: String, state: State<AppState>) -> Result<serde_json::Value, String> {
+pub fn get_config_field(
+    field: String,
+    state: State<AppState>,
+) -> Result<serde_json::Value, String> {
     let config = state.config.lock().map_err(|e| e.to_string())?;
     let value = serde_json::to_value(&*config).map_err(|e| e.to_string())?;
     value
@@ -25,7 +28,12 @@ pub fn get_config_field(field: String, state: State<AppState>) -> Result<serde_j
 }
 
 #[tauri::command]
-pub fn set_config_field(app: tauri::AppHandle, field: String, value: serde_json::Value, state: State<AppState>) -> Result<(), String> {
+pub fn set_config_field(
+    app: tauri::AppHandle,
+    field: String,
+    value: serde_json::Value,
+    state: State<AppState>,
+) -> Result<(), String> {
     let mut config = state.config.lock().map_err(|e| e.to_string())?;
     config.update_field(&field, value)?;
     config.save(&app)?;
@@ -33,7 +41,10 @@ pub fn set_config_field(app: tauri::AppHandle, field: String, value: serde_json:
 }
 
 #[tauri::command]
-pub fn reset_config(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<AppConfig, String> {
+pub fn reset_config(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AppConfig, String> {
     let default_config = AppConfig::default();
     {
         let mut config = state.config.lock().map_err(|e| e.to_string())?;

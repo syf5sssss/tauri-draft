@@ -1,7 +1,14 @@
-use std::{ net::{ SocketAddr, Ipv4Addr }, sync::Arc, collections::VecDeque };
-use tauri::{ AppHandle, Emitter, State };
-use tokio::{ net::UdpSocket, sync::{ mpsc, Mutex } };
-use serde::{ Deserialize, Serialize };
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::VecDeque,
+    net::{Ipv4Addr, SocketAddr},
+    sync::Arc,
+};
+use tauri::{AppHandle, Emitter, State};
+use tokio::{
+    net::UdpSocket,
+    sync::{mpsc, Mutex},
+};
 
 // 消息结构体
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,8 +44,8 @@ impl Default for MulticastState {
 pub async fn open_udp_service(
     app: AppHandle,
     state: State<'_, MulticastState>,
-    addr: String, // 绑定地址，如 "0.0.0.0:8888"
-    multicast_addr: String // 组播地址，如 "232.252.252.252"
+    addr: String,           // 绑定地址，如 "0.0.0.0:8888"
+    multicast_addr: String, // 组播地址，如 "232.252.252.252"
 ) -> Result<(), String> {
     let mut service = state.udp_service.lock().await;
 
@@ -47,16 +54,24 @@ pub async fn open_udp_service(
     }
 
     // 创建套接字
-    let socket = UdpSocket::bind(&addr).await.map_err(|e| format!("Bind failed: {}", e))?;
+    let socket = UdpSocket::bind(&addr)
+        .await
+        .map_err(|e| format!("Bind failed: {}", e))?;
 
     // 加入组播
-    let multicast_ip: Ipv4Addr = multicast_addr.parse().map_err(|_| format!("Invalid multicast address: {}", multicast_addr))?;
+    let multicast_ip: Ipv4Addr = multicast_addr
+        .parse()
+        .map_err(|_| format!("Invalid multicast address: {}", multicast_addr))?;
 
     // 使用Tokio原生方法加入组播
-    socket.join_multicast_v4(multicast_ip, Ipv4Addr::UNSPECIFIED).map_err(|e| format!("Join multicast failed: {}", e))?;
+    socket
+        .join_multicast_v4(multicast_ip, Ipv4Addr::UNSPECIFIED)
+        .map_err(|e| format!("Join multicast failed: {}", e))?;
 
     // 设置TTL以支持跨路由器
-    socket.set_ttl(32).map_err(|e| format!("Set TTL failed: {}", e))?;
+    socket
+        .set_ttl(32)
+        .map_err(|e| format!("Set TTL failed: {}", e))?;
 
     let socket = Arc::new(socket);
 
@@ -97,12 +112,20 @@ pub async fn open_udp_service(
         }
     });
 
-    println!("UDP service started on {} with multicast group {}", addr, multicast_addr);
+    println!(
+        "UDP service started on {} with multicast group {}",
+        addr, multicast_addr
+    );
     Ok(())
 }
 
 // 处理接收数据（修复版）
-pub fn process_data(data: &[u8], packet_queue: &mut VecDeque<u8>, app: &AppHandle, src: SocketAddr) {
+pub fn process_data(
+    data: &[u8],
+    packet_queue: &mut VecDeque<u8>,
+    app: &AppHandle,
+    src: SocketAddr,
+) {
     packet_queue.extend(data);
 
     // 持续查找完整的 \r\n 分隔符
@@ -126,9 +149,10 @@ pub fn process_data(data: &[u8], packet_queue: &mut VecDeque<u8>, app: &AppHandl
             });
 
             println!("Received valid message: {}", event_data.to_string());
-            app.emit("multicast-message", event_data).unwrap_or_else(|e| {
-                println!("Emit failed: {}", e);
-            });
+            app.emit("multicast-message", event_data)
+                .unwrap_or_else(|e| {
+                    println!("Emit failed: {}", e);
+                });
         } else {
             // 未找到完整分隔符，等待更多数据
             break;
@@ -146,7 +170,9 @@ pub async fn close_udp_service(state: State<'_, MulticastState>) -> Result<(), S
     };
 
     if let Some(tx) = shutdown_tx {
-        tx.send(()).await.map_err(|e| format!("Send shutdown failed: {}", e))?;
+        tx.send(())
+            .await
+            .map_err(|e| format!("Send shutdown failed: {}", e))?;
     }
 
     // 再次获取锁来清理状态
@@ -162,7 +188,7 @@ pub async fn close_udp_service(state: State<'_, MulticastState>) -> Result<(), S
 pub async fn send_udp_message(
     state: State<'_, MulticastState>,
     message: String, // 直接接收结构体
-    target_addr: String
+    target_addr: String,
 ) -> Result<(), String> {
     // 只短暂持有锁来获取套接字
     let socket = {
@@ -181,7 +207,10 @@ pub async fn send_udp_message(
     // let json_msg = serde_json::to_string(&message).map_err(|e| format!("JSON serialization failed: {}", e))?;
     let full_msg = format!("{}\r\n", &message);
 
-    socket.send_to(full_msg.as_bytes(), &target_addr).await.map_err(|e| format!("Send failed: {}", e))?;
+    socket
+        .send_to(full_msg.as_bytes(), &target_addr)
+        .await
+        .map_err(|e| format!("Send failed: {}", e))?;
 
     println!("Sent message to {}", target_addr);
     Ok(())
@@ -189,7 +218,12 @@ pub async fn send_udp_message(
 
 // 发送组播消息（专用命令）
 #[tauri::command]
-pub async fn send_multicast_message(state: State<'_, MulticastState>, message: String, port: u16, multicast_addr: String) -> Result<(), String> {
+pub async fn send_multicast_message(
+    state: State<'_, MulticastState>,
+    message: String,
+    port: u16,
+    multicast_addr: String,
+) -> Result<(), String> {
     let target_addr = format!("{}:{}", multicast_addr, port);
     send_udp_message(state, message, target_addr).await
 }

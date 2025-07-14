@@ -1,5 +1,5 @@
-use chrono::NaiveDateTime;
 use crate::dto::parse::parse_publish_date;
+use chrono::NaiveDateTime;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Student {

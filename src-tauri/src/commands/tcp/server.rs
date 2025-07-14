@@ -1,11 +1,11 @@
-use tauri::{ AppHandle, Emitter, State };
-use tokio::net::{ TcpListener, TcpStream };
-use tokio::io::{ AsyncReadExt, AsyncWriteExt };
-use tokio::sync::{ broadcast, mpsc, RwLock };
-use serde_json::{ Value, json };
-use std::sync::Arc;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter, State};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::{broadcast, mpsc, RwLock};
 
 // 服务器状态
 pub struct TcpServerState {
@@ -29,7 +29,12 @@ impl Default for TcpServerState {
 }
 
 #[tauri::command]
-pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app_handle: AppHandle, ip: String, port: u32) -> Result<(), String> {
+pub async fn start_tcp_server(
+    state: State<'_, Arc<RwLock<TcpServerState>>>,
+    app_handle: AppHandle,
+    ip: String,
+    port: u32,
+) -> Result<(), String> {
     // 检查服务器是否已运行
     {
         let state = state.read().await;
@@ -76,7 +81,8 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
         // 获取监听器
         let listener = {
             let mut state = state_clone.write().await;
-            state.listener
+            state
+                .listener
                 .take()
                 .ok_or_else(|| String::from("Server listener not initialized"))
                 .unwrap()
@@ -98,7 +104,13 @@ pub async fn start_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>, app
     Ok(())
 }
 
-async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<String>>, clients: Arc<RwLock<HashMap<std::net::SocketAddr, broadcast::Sender<String>>>>, listener: TcpListener, mut shutdown_rx: mpsc::Receiver<()>) {
+async fn server_main_loop(
+    app_handle: AppHandle,
+    tx: Arc<broadcast::Sender<String>>,
+    clients: Arc<RwLock<HashMap<std::net::SocketAddr, broadcast::Sender<String>>>>,
+    listener: TcpListener,
+    mut shutdown_rx: mpsc::Receiver<()>,
+) {
     // 使用 accept() 替代 incoming()
     let shutdown_notified = false;
     // 创建客户端关闭通道
@@ -108,7 +120,7 @@ async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<Strin
         // 等待关闭信号或新连接
         tokio::select! {
             biased; // 优先处理关闭信号
-            
+
             _ = shutdown_rx.recv() => {
                 // 关闭服务器
                 if !shutdown_notified {
@@ -123,7 +135,7 @@ async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<Strin
                     break;
                 }
             }
-            
+
             // 处理客户端关闭信号
             _ = client_shutdown_rx.recv() => {
                 // 此处可添加自定义客户端关闭处理
@@ -143,7 +155,7 @@ async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<Strin
                         let clients_clone = Arc::clone(&clients);
                         // 克隆客户端关闭通道
                         let client_shutdown_tx_clone = client_shutdown_tx.clone();
-                        
+
                         tokio::spawn(async move {
                             handle_client(app_handle_clone, stream, addr, tx_clone, clients_clone, client_shutdown_tx_clone).await;
                         });
@@ -162,10 +174,14 @@ async fn server_main_loop(app_handle: AppHandle, tx: Arc<broadcast::Sender<Strin
     for (addr, client_tx) in clients.drain() {
         println!("Closing client: {}", addr);
         // 发送关闭通知
-        let _ = client_tx.send(json!({
-            "system": "server_shutdown",
-            "message": "Server is shutting down"
-        }).to_string() + "\r\n");
+        let _ = client_tx.send(
+            json!({
+                "system": "server_shutdown",
+                "message": "Server is shutting down"
+            })
+            .to_string()
+                + "\r\n",
+        );
     }
 
     // 等待一段时间让客户端处理关闭通知
@@ -213,7 +229,10 @@ pub async fn stop_tcp_server(state: State<'_, Arc<RwLock<TcpServerState>>>) -> R
 }
 
 #[tauri::command]
-pub async fn send_to_clients(state: State<'_, Arc<RwLock<TcpServerState>>>, message: String) -> Result<(), String> {
+pub async fn send_to_clients(
+    state: State<'_, Arc<RwLock<TcpServerState>>>,
+    message: String,
+) -> Result<(), String> {
     // 验证JSON格式
     let _: Value = serde_json::from_str(&message).map_err(|e| format!("Invalid JSON: {}", e))?;
 
@@ -222,7 +241,10 @@ pub async fn send_to_clients(state: State<'_, Arc<RwLock<TcpServerState>>>, mess
         let state = state.read().await;
 
         // 检查服务器是否在运行并获取发送器
-        let tx = state.tx.as_ref().ok_or_else(|| "Server is not running or not initialized".to_string())?;
+        let tx = state
+            .tx
+            .as_ref()
+            .ok_or_else(|| "Server is not running or not initialized".to_string())?;
 
         // 发送消息给所有客户端
         let message_with_delimiter = message.clone() + "\r\n";
@@ -249,13 +271,14 @@ pub async fn send_to_clients(state: State<'_, Arc<RwLock<TcpServerState>>>, mess
 pub async fn send_to_client(
     state: State<'_, Arc<RwLock<TcpServerState>>>,
     client_addr: String, // 客户端地址，如 "127.0.0.1:12345"
-    message: String
+    message: String,
 ) -> Result<(), String> {
     // 验证JSON格式
     let _: Value = serde_json::from_str(&message).map_err(|e| format!("Invalid JSON: {}", e))?;
 
     // 解析客户端地址
-    let addr = std::net::SocketAddr::from_str(&client_addr).map_err(|e| format!("Invalid client address: {}", e))?;
+    let addr = std::net::SocketAddr::from_str(&client_addr)
+        .map_err(|e| format!("Invalid client address: {}", e))?;
 
     // 获取状态
     let state_guard = state.read().await;
@@ -288,7 +311,7 @@ async fn handle_client(
     addr: std::net::SocketAddr,
     tx: Arc<broadcast::Sender<String>>, // 广播通道
     clients: Arc<RwLock<HashMap<std::net::SocketAddr, broadcast::Sender<String>>>>, // 客户端映射
-    client_shutdown_tx: mpsc::Sender<()> // 客户端关闭通知通道
+    client_shutdown_tx: mpsc::Sender<()>, // 客户端关闭通知通道
 ) {
     // println!("Handling client connection from {}", addr);
 
@@ -401,7 +424,10 @@ async fn handle_client(
                         buffer = buffer[delimiter_pos + 2..].to_vec(); // +2 跳过 \r\n
                     } else {
                         // 防止溢出，清空缓冲区
-                        eprintln!("Invalid delimiter position, clearing buffer for client {}", addr);
+                        eprintln!(
+                            "Invalid delimiter position, clearing buffer for client {}",
+                            addr
+                        );
                         buffer.clear();
                     }
 
@@ -409,7 +435,8 @@ async fn handle_client(
                     match serde_json::from_str::<Value>(&message) {
                         Ok(json_data) => {
                             println!("Received message from {}: {:?}", addr, json_data);
-                            if let Err(e) = app_handle.emit("server_data", format!("{}", json_data)) {
+                            if let Err(e) = app_handle.emit("server_data", format!("{}", json_data))
+                            {
                                 eprintln!("Failed to emit event: {}", e);
                             }
                             // 不再自动回复客户端消息
@@ -421,7 +448,8 @@ async fn handle_client(
                             let error_response = json!({
                                 "error": "Invalid JSON",
                                 "details": e.to_string()
-                            }).to_string();
+                            })
+                            .to_string();
 
                             if let Err(e) = client_tx.send(error_response + "\r\n") {
                                 eprintln!("Failed to send error response: {}", e);
@@ -469,10 +497,7 @@ pub async fn get_connstr(state: State<'_, Arc<RwLock<TcpServerState>>>) -> Resul
     }
 
     // 提取所有客户端地址并转换为字符串
-    let addresses: Vec<String> = clients
-        .keys()
-        .map(|addr| addr.to_string())
-        .collect();
+    let addresses: Vec<String> = clients.keys().map(|addr| addr.to_string()).collect();
 
     // 用逗号分隔连接地址
     Ok(addresses.join(","))

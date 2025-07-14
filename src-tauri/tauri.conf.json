@@ -33,6 +33,9 @@
     }
   },
   "bundle": {
+    "resources": [
+      "models"
+    ],
     "active": false,
     "targets": "all",
     "icon": [

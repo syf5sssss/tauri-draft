@@ -38,7 +38,10 @@ tauri-plugin-os = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = "2"
-
+tauri-plugin-fs = "2"
+base64 = "0.21"
+image = "0.24"
+rust-faces = "1.0.0"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
 tauri-plugin-window-state = "2"

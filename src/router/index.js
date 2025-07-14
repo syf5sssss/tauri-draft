@@ -49,6 +49,11 @@ const router = createRouter({
                     component: () => import('@/views/draft/PopulaStructure.vue')
                 },
                 {
+                    path: '/draft/blazeface',
+                    name: 'blazeface',
+                    component: () => import('@/views/draft/BlazeFace.vue')
+                },
+                {
                     path: '/draft/socket/tcpserver',
                     name: 'tcpserver',
                     component: () => import('@/views/draft/TcpServer.vue')

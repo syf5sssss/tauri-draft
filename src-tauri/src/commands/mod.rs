@@ -1,29 +1,31 @@
 pub mod book;
+pub mod config;
 pub mod draft;
 pub mod envpath;
-pub mod greet;
-pub mod sqlx;
-pub mod config;
-pub mod thread;
-pub mod tcp;
-pub mod udp;
 pub mod fileio;
+pub mod greet;
 pub mod listmap;
 pub mod popula;
+pub mod sqlx;
+pub mod tcp;
+pub mod thread;
+pub mod udp;
+pub mod blazeface;
 
 // 导出所有命令函数
 pub use book::*;
+pub use config::*;
 pub use draft::*;
 pub use envpath::*;
-pub use greet::*;
-pub use sqlx::*;
-pub use config::*;
-pub use thread::*;
-pub use tcp::*;
-pub use udp::*;
 pub use fileio::*;
+pub use greet::*;
 pub use listmap::*;
 pub use popula::*;
+pub use sqlx::*;
+pub use tcp::*;
+pub use thread::*;
+pub use udp::*;
+pub use blazeface::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -93,6 +95,9 @@ macro_rules! register_commands {
             $crate::commands::listmap::query_teachers,
             $crate::commands::listmap::get_teacher,
             $crate::commands::popula::popula_list,
+            $crate::commands::blazeface::face_init,
+            $crate::commands::blazeface::write_file,
+            $crate::commands::blazeface::cmd_detect_face_position,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,

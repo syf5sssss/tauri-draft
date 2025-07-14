@@ -1,11 +1,11 @@
+use serde::Serialize;
 use std::{
     net::UdpSocket,
-    sync::{ Arc, Mutex },
+    sync::{Arc, Mutex},
     thread,
     time::Duration, // 使用标准库的 Duration
 };
-use tauri::{ AppHandle, Emitter, State };
-use serde::Serialize;
+use tauri::{AppHandle, Emitter, State};
 
 // 内部状态结构
 pub struct InnerState {
@@ -23,12 +23,10 @@ impl Default for BroadcastState {
     fn default() -> Self {
         BroadcastState {
             socket: Mutex::new(None),
-            inner: Arc::new(
-                Mutex::new(InnerState {
-                    running: false,
-                    app_handle: None,
-                })
-            ),
+            inner: Arc::new(Mutex::new(InnerState {
+                running: false,
+                app_handle: None,
+            })),
         }
     }
 }
@@ -41,7 +39,11 @@ pub struct BroadcastMessage {
 }
 // 打开广播服务
 #[tauri::command]
-pub async fn open_broadcast_service(app: AppHandle, state: State<'_, BroadcastState>, port: u16) -> Result<(), String> {
+pub async fn open_broadcast_service(
+    app: AppHandle,
+    state: State<'_, BroadcastState>,
+    port: u16,
+) -> Result<(), String> {
     let mut inner = state.inner.lock().unwrap();
     if inner.running {
         return Err("Broadcast service is already running".into());
@@ -131,7 +133,10 @@ pub fn receive_broadcast_messages(socket: Arc<UdpSocket>, state: Arc<Mutex<Inner
                     buffer.clear();
                 }
             }
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut => {
+            Err(ref e)
+                if e.kind() == std::io::ErrorKind::WouldBlock
+                    || e.kind() == std::io::ErrorKind::TimedOut =>
+            {
                 // 超时或阻塞是预期行为，继续循环
                 continue;
             }
@@ -165,7 +170,11 @@ pub async fn close_broadcast_service(state: State<'_, BroadcastState>) -> Result
 
 // 发送广播消息（添加粘包处理）
 #[tauri::command]
-pub async fn send_broadcast_message(state: State<'_, BroadcastState>, message: String, port: u16) -> Result<(), String> {
+pub async fn send_broadcast_message(
+    state: State<'_, BroadcastState>,
+    message: String,
+    port: u16,
+) -> Result<(), String> {
     // 检查运行状态
     {
         let guard = state.inner.lock().unwrap();
@@ -186,7 +195,9 @@ pub async fn send_broadcast_message(state: State<'_, BroadcastState>, message: S
     };
 
     let broadcast_addr = format!("255.255.255.255:{}", port);
-    socket.send_to(full_message.as_bytes(), broadcast_addr).map_err(|e| format!("Send failed: {}", e))?;
+    socket
+        .send_to(full_message.as_bytes(), broadcast_addr)
+        .map_err(|e| format!("Send failed: {}", e))?;
 
     println!("Sent broadcast: {}", message);
     Ok(())

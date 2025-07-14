@@ -1,10 +1,10 @@
 use crate::commands::envpath::env_path;
 use crate::dao::BookDao;
-use crate::dto::{ Book, BookQuery, Page };
+use crate::dto::{Book, BookQuery, Page};
 use chrono::Local;
 use std::fs;
 use std::path::PathBuf;
-use tauri::{ command, AppHandle };
+use tauri::{command, AppHandle};
 use uuid::Uuid;
 
 #[command]
@@ -94,7 +94,11 @@ pub async fn search(query: &str, current_page: i32, page_size: i32) -> Result<Pa
 }
 
 #[command]
-pub async fn dynamics_search(query: BookQuery, current_page: i32, page_size: i32) -> Result<Page<Book>, String> {
+pub async fn dynamics_search(
+    query: BookQuery,
+    current_page: i32,
+    page_size: i32,
+) -> Result<Page<Book>, String> {
     match BookDao::dynamics_search(&query, current_page, page_size).await {
         Ok(pagebooks) => Ok(pagebooks),
         Err(e) => {
@@ -112,7 +116,9 @@ pub async fn dynamics_search(query: BookQuery, current_page: i32, page_size: i32
 
 #[command]
 pub async fn create(book: Book) -> Result<String, String> {
-    let res = BookDao::create(&book).await.map_err(|e| format!("创建书籍失败: {}", e))?;
+    let res = BookDao::create(&book)
+        .await
+        .map_err(|e| format!("创建书籍失败: {}", e))?;
     Ok(format!("{:?}", res))
 }
 

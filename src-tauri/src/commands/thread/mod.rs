@@ -1,10 +1,10 @@
-use chrono::{ DateTime, Local };
-use tauri::{ command, AppHandle, State };
-use tauri::Emitter;
-use tauri::Manager;
+use chrono::{DateTime, Local};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
-use std::sync::atomic::{ AtomicBool, Ordering };
+use tauri::Emitter;
+use tauri::Manager;
+use tauri::{command, AppHandle, State};
 
 use crate::dto::ThreadState;
 
@@ -127,7 +127,12 @@ pub fn get_last_update(thread_state: State<'_, ThreadState>) -> Result<String, S
 #[tauri::command]
 pub fn progress_update(app_handle: AppHandle) {
     let app_handle_clone = app_handle.clone();
-    let mut vector = vec![(2, "操作准备中"), (11, "下班回家"), (24, "钉钉打卡"), (32, "自行车行驶")];
+    let mut vector = vec![
+        (2, "操作准备中"),
+        (11, "下班回家"),
+        (24, "钉钉打卡"),
+        (32, "自行车行驶"),
+    ];
     vector.push((44, "菜市场买菜"));
     vector.push((54, "自行车停放"));
     vector.push((64, "收快递回家"));

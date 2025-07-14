@@ -1,10 +1,15 @@
-use serde::Serialize;
-use std::{ collections::HashMap, fs, io, path::{ Path, PathBuf }, time::SystemTime };
-use walkdir::WalkDir;
 use anyhow::Result;
-use std::process::Command;
-use chrono::{ DateTime, Local };
+use chrono::{DateTime, Local};
+use serde::Serialize;
 use std::collections::HashSet;
+use std::process::Command;
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
+use walkdir::WalkDir;
 // 文件/目录类型
 #[derive(Serialize, Debug, PartialEq, Eq)]
 pub enum EntryType {
@@ -16,15 +21,15 @@ pub enum EntryType {
 #[derive(Serialize, Debug)]
 pub struct NodeData {
     pub name: String,
-    pub path: String, // 添加完整路径
-    pub size: u64, // 原始字节大小
+    pub path: String,           // 添加完整路径
+    pub size: u64,              // 原始字节大小
     pub formatted_size: String, // 格式化后的大小
-    pub entry_type: EntryType, // 使用枚举类型
-    pub file_type: String, // 详细文件类型
-    pub created: String, // 创建时间
-    pub modified: String, // 修改时间
-    pub accessed: String, // 访问时间
-    pub is_empty: bool, // 是否为空（目录）
+    pub entry_type: EntryType,  // 使用枚举类型
+    pub file_type: String,      // 详细文件类型
+    pub created: String,        // 创建时间
+    pub modified: String,       // 修改时间
+    pub accessed: String,       // 访问时间
+    pub is_empty: bool,         // 是否为空（目录）
 }
 
 // 前端需要的树节点格式
@@ -62,7 +67,13 @@ fn format_size(size: u64) -> String {
         unit_index += 1;
     }
 
-    let decimals = if size < 10.0 { 2 } else if size < 100.0 { 1 } else { 0 };
+    let decimals = if size < 10.0 {
+        2
+    } else if size < 100.0 {
+        1
+    } else {
+        0
+    };
     format!("{size:.decimals$}{}", UNITS[unit_index])
 }
 
@@ -75,17 +86,15 @@ fn get_file_type(path: &str, is_dir: bool) -> String {
     Path::new(path)
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| {
-            match ext.to_lowercase().as_str() {
-                "app" | "exe" => "Application",
-                "txt" | "md" | "log" => "Text",
-                "jpg" | "jpeg" | "png" | "gif" | "bmp" => "Image",
-                "mp3" | "wav" | "flac" => "Audio",
-                "mp4" | "avi" | "mov" | "mkv" => "Video",
-                "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" => "Document",
-                "zip" | "rar" | "7z" | "tar" | "gz" => "Archive",
-                _ => "File",
-            }
+        .map(|ext| match ext.to_lowercase().as_str() {
+            "app" | "exe" => "Application",
+            "txt" | "md" | "log" => "Text",
+            "jpg" | "jpeg" | "png" | "gif" | "bmp" => "Image",
+            "mp3" | "wav" | "flac" => "Audio",
+            "mp4" | "avi" | "mov" | "mkv" => "Video",
+            "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" => "Document",
+            "zip" | "rar" | "7z" | "tar" | "gz" => "Archive",
+            _ => "File",
         })
         .unwrap_or("File")
         .to_string()
@@ -94,7 +103,11 @@ fn get_file_type(path: &str, is_dir: bool) -> String {
 // 递归创建树节点
 fn create_tree_node(path: &Path, recursive: bool) -> Result<TreeNode> {
     let metadata = fs::metadata(path)?;
-    let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let name = path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
     let full_path = path.to_string_lossy().to_string();
     let is_dir = metadata.is_dir();
 
@@ -130,7 +143,9 @@ fn create_tree_node(path: &Path, recursive: bool) -> Result<TreeNode> {
             // 比较类型：目录在前，文件在后
             match (&a.data.entry_type, &b.data.entry_type) {
                 // 都是目录 - 按名称排序
-                (EntryType::Directory, EntryType::Directory) => { a.data.name.to_lowercase().cmp(&b.data.name.to_lowercase()) }
+                (EntryType::Directory, EntryType::Directory) => {
+                    a.data.name.to_lowercase().cmp(&b.data.name.to_lowercase())
+                }
                 // 都是文件 - 按类型、扩展名和名称排序
                 (EntryType::File, EntryType::File) => {
                     // 1. 先按文件类型排序
@@ -242,7 +257,9 @@ fn inner_get_directory_info(path: &Path, recursive: bool) -> Result<DirectorySta
         // 比较类型：目录在前，文件在后
         match (&a.data.entry_type, &b.data.entry_type) {
             // 都是目录 - 按名称排序
-            (EntryType::Directory, EntryType::Directory) => { a.data.name.to_lowercase().cmp(&b.data.name.to_lowercase()) }
+            (EntryType::Directory, EntryType::Directory) => {
+                a.data.name.to_lowercase().cmp(&b.data.name.to_lowercase())
+            }
             // 都是文件 - 按类型、扩展名和名称排序
             (EntryType::File, EntryType::File) => {
                 // 1. 先按文件类型排序
@@ -303,11 +320,11 @@ pub fn create_entry(path: String, is_directory: bool) -> Result<(), String> {
     } else {
         if let Some(parent) = path.parent() {
             if !parent.exists() {
-                fs::create_dir_all(parent).map_err(|e| format!("Failed to create parent directory: {}", e))?;
+                fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create parent directory: {}", e))?;
             }
         }
-        fs::File
-            ::create(path)
+        fs::File::create(path)
             .map_err(|e| format!("Failed to create file: {}", e))
             .map(|_| ())
     }
@@ -319,16 +336,16 @@ pub fn delete_entries(paths: Vec<String>) -> Result<(), String> {
     // 1. 路径规范化
     let unique_paths: HashSet<PathBuf> = paths
         .into_iter()
-        .map(|p|
+        .map(|p| {
             PathBuf::from(p.clone())
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(p))
-        )
+        })
         .collect();
 
     // 2. 按路径深度降序排序（最深路径在前）
     let mut sorted_paths: Vec<PathBuf> = unique_paths.into_iter().collect();
-    sorted_paths.sort_by(|a, b| { b.components().count().cmp(&a.components().count()) });
+    sorted_paths.sort_by(|a, b| b.components().count().cmp(&a.components().count()));
 
     // 3. 安全删除
     for path in sorted_paths {
@@ -365,7 +382,7 @@ pub fn delete_empty_directories(paths: Vec<String>) -> Result<(), String> {
     let mut sorted_paths: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
 
     // 按路径深度降序排序（最深的在前）
-    sorted_paths.sort_by(|a, b| { b.components().count().cmp(&a.components().count()) });
+    sorted_paths.sort_by(|a, b| b.components().count().cmp(&a.components().count()));
 
     for path in sorted_paths {
         // 检查路径是否存在
@@ -398,7 +415,8 @@ pub fn delete_empty_directories(paths: Vec<String>) -> Result<(), String> {
 
 /// 检查目录是否为空（不包含任何文件或子目录）
 fn is_empty(path: &Path) -> Result<bool, String> {
-    let mut entries = fs::read_dir(path).map_err(|e| format!("无法读取目录内容: {} - {}", path.display(), e))?;
+    let mut entries =
+        fs::read_dir(path).map_err(|e| format!("无法读取目录内容: {} - {}", path.display(), e))?;
 
     Ok(entries.next().is_none())
 }
@@ -412,11 +430,24 @@ pub fn rename_entries(rename_map: HashMap<String, String>) -> Result<(), String>
 
         if let Some(parent) = new_path.parent() {
             if !parent.exists() {
-                fs::create_dir_all(parent).map_err(|e| format!("Failed to create parent directory: {} - {}", parent.display(), e))?;
+                fs::create_dir_all(parent).map_err(|e| {
+                    format!(
+                        "Failed to create parent directory: {} - {}",
+                        parent.display(),
+                        e
+                    )
+                })?;
             }
         }
 
-        fs::rename(old_path, new_path).map_err(|e| format!("Failed to rename {} to {} - {}", old_path.display(), new_path.display(), e))?;
+        fs::rename(old_path, new_path).map_err(|e| {
+            format!(
+                "Failed to rename {} to {} - {}",
+                old_path.display(),
+                new_path.display(),
+                e
+            )
+        })?;
     }
     Ok(())
 }
@@ -490,12 +521,17 @@ pub fn open_entry_location(path: String) -> Result<(), String> {
 
 /// Tauri 命令 - 批量移动文件/目录到新目录
 #[tauri::command]
-pub fn move_entries(sources: Vec<String>, target_dir: String, overwrite: bool) -> Result<(), String> {
+pub fn move_entries(
+    sources: Vec<String>,
+    target_dir: String,
+    overwrite: bool,
+) -> Result<(), String> {
     let target_path = Path::new(&target_dir);
 
     // 确保目标目录存在
     if !target_path.exists() {
-        fs::create_dir_all(target_path).map_err(|e| format!("Failed to create target directory: {}", e))?;
+        fs::create_dir_all(target_path)
+            .map_err(|e| format!("Failed to create target directory: {}", e))?;
     } else if !target_path.is_dir() {
         return Err("Target path is not a directory".to_string());
     }
@@ -521,17 +557,23 @@ pub fn move_entries(sources: Vec<String>, target_dir: String, overwrite: bool) -
             if overwrite {
                 // 递归删除已存在的目标
                 if dest_path.is_dir() {
-                    fs::remove_dir_all(&dest_path).map_err(|e| format!("Failed to remove existing directory: {}", e))?;
+                    fs::remove_dir_all(&dest_path)
+                        .map_err(|e| format!("Failed to remove existing directory: {}", e))?;
                 } else {
-                    fs::remove_file(&dest_path).map_err(|e| format!("Failed to remove existing file: {}", e))?;
+                    fs::remove_file(&dest_path)
+                        .map_err(|e| format!("Failed to remove existing file: {}", e))?;
                 }
             } else {
-                return Err(format!("Target already exists and overwrite is disabled: {}", dest_path.display()));
+                return Err(format!(
+                    "Target already exists and overwrite is disabled: {}",
+                    dest_path.display()
+                ));
             }
         }
 
         // 执行移动操作
-        fs::rename(&source_path, &dest_path).map_err(|e| format!("Failed to move {} to {}: {}", src, dest_path.display(), e))?;
+        fs::rename(&source_path, &dest_path)
+            .map_err(|e| format!("Failed to move {} to {}: {}", src, dest_path.display(), e))?;
     }
 
     Ok(())

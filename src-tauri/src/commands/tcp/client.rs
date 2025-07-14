@@ -1,10 +1,10 @@
-use tauri::{ command, State, AppHandle, Emitter };
-use tokio::net::TcpStream;
-use tokio::io::{ AsyncReadExt, AsyncWriteExt, BufReader };
-use tokio::sync::{ Mutex, mpsc };
+use crate::commands::find_delimiter;
 use serde_json::Value;
 use std::sync::Arc;
-use crate::commands::find_delimiter;
+use tauri::{command, AppHandle, Emitter, State};
+use tokio::io::{AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::net::TcpStream;
+use tokio::sync::{mpsc, Mutex};
 
 // 客户端状态
 #[derive(Clone)]
@@ -21,7 +21,11 @@ impl Default for TcpClientState {
 }
 
 #[command]
-pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClientState>, address: String) -> Result<(), String> {
+pub async fn tcp_client_connect(
+    app_handle: AppHandle,
+    client: State<'_, TcpClientState>,
+    address: String,
+) -> Result<(), String> {
     // 检查是否已连接
     {
         let tx_guard = client.tx.lock().await;
@@ -37,7 +41,9 @@ pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClie
         format!("Connection failed: {}", e)
     })?;
 
-    stream.set_nodelay(true).map_err(|e| format!("Failed to set nodelay: {}", e))?;
+    stream
+        .set_nodelay(true)
+        .map_err(|e| format!("Failed to set nodelay: {}", e))?;
 
     let _ = app_handle.emit("client_msg", "连接成功");
 
@@ -92,7 +98,8 @@ pub async fn tcp_client_connect(app_handle: AppHandle, client: State<'_, TcpClie
                     // 处理所有完整的消息
                     while let Some(delimiter_pos) = find_delimiter(&buffer) {
                         // 提取完整消息
-                        let message = String::from_utf8_lossy(&buffer[0..delimiter_pos]).into_owned();
+                        let message =
+                            String::from_utf8_lossy(&buffer[0..delimiter_pos]).into_owned();
 
                         // 从缓冲区移除已处理的消息
                         buffer = buffer[delimiter_pos + 2..].to_vec(); // +2 跳过 \r\n
@@ -138,15 +145,22 @@ pub async fn disconnect(client: State<'_, TcpClientState>) -> Result<(), String>
 }
 
 #[command]
-pub async fn send_message(client: State<'_, TcpClientState>, message: String) -> Result<(), String> {
+pub async fn send_message(
+    client: State<'_, TcpClientState>,
+    message: String,
+) -> Result<(), String> {
     // 验证JSON格式
     let _: Value = serde_json::from_str(&message).map_err(|e| format!("Invalid JSON: {}", e))?;
 
     // 发送消息
     let tx_guard = client.tx.lock().await;
-    let tx = tx_guard.as_ref().ok_or_else(|| "Not connected".to_string())?;
+    let tx = tx_guard
+        .as_ref()
+        .ok_or_else(|| "Not connected".to_string())?;
 
-    tx.send(message).await.map_err(|e| format!("Failed to send message: {}", e))?;
+    tx.send(message)
+        .await
+        .map_err(|e| format!("Failed to send message: {}", e))?;
 
     Ok(())
 }

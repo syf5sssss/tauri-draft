@@ -1,7 +1,7 @@
-use chrono::NaiveDateTime;
-use serde::{ Deserialize, Serialize };
-use sqlx::FromRow;
 use crate::dto::parse::parse_publish_date;
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
 #[derive(FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct Book {

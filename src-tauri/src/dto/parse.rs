@@ -1,7 +1,10 @@
-use chrono::{ DateTime, NaiveDateTime };
-use serde::{ de, Deserialize };
+use chrono::{DateTime, NaiveDateTime};
+use serde::{de, Deserialize};
 
-pub fn parse_publish_date<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error> where D: de::Deserializer<'de> {
+pub fn parse_publish_date<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
     let s = String::deserialize(deserializer)?;
 
     // 尝试解析 ISO 格式 (如 "2025-06-27T17:21:28Z")
