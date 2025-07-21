@@ -11,10 +11,10 @@
     "opener:default",
     "shell:allow-open",
     "core:path:default",
+    "core:app:default",
     "core:path:allow-resolve",
     "core:path:allow-resolve-directory",
     "os:default",
-    "fs:default",
     "os:allow-hostname",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
@@ -24,6 +24,23 @@
     "dialog:default",
     "dialog:allow-open",
     "dialog:allow-save",
-    "dialog:allow-message"
+    "dialog:allow-message",
+    "fs:allow-read",
+    "fs:allow-read-file",
+    "fs:allow-write",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        },
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
+    }
   ]
 }

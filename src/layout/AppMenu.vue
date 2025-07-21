@@ -19,6 +19,8 @@ const model = ref([
             { label: 'Vec', icon: 'pi pi-fw pi-home', to: '/draft/vec' },
             { label: 'Structure', icon: 'pi pi-fw pi-home', to: '/draft/structure' },
             { label: 'BlazeFace', icon: 'pi pi-fw pi-home', to: '/draft/blazeface' },
+            { label: 'Recog2021', icon: 'pi pi-fw pi-home', to: '/draft/recog2021' },
+            { label: 'DetectYunet2023', icon: 'pi pi-fw pi-home', to: '/draft/detectyunet2023' },
             {
                 label: 'Socket',
                 icon: 'pi pi-fw pi-home',

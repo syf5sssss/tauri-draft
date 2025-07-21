@@ -54,6 +54,16 @@ const router = createRouter({
                     component: () => import('@/views/draft/BlazeFace.vue')
                 },
                 {
+                    path: '/draft/recog2021',
+                    name: 'recog2021',
+                    component: () => import('@/views/draft/Recog2021.vue')
+                },
+                {
+                    path: '/draft/detectyunet2023',
+                    name: 'detectyunet2023',
+                    component: () => import('@/views/draft/DetectYunet2023.vue')
+                },
+                {
                     path: '/draft/socket/tcpserver',
                     name: 'tcpserver',
                     component: () => import('@/views/draft/TcpServer.vue')

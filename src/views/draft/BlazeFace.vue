@@ -373,7 +373,7 @@ watch(
     position: absolute;
     top: 0;
     left: 0;
-    pointerEvents: none;
+    /* pointerEvents: none; */
 }
 
 .detection-result {

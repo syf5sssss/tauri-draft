@@ -1,7 +1,4 @@
-use commands::{
-    connect_db, AppState, BroadcastState, MulticastState, StudentMap, TcpClientState,
-    TcpServerState, TeacherList,
-};
+use commands::{ connect_db, AppState, BroadcastState, MulticastState, StudentMap, TcpClientState, TcpServerState, TeacherList };
 use dto::ThreadState;
 use tauri_plugin_autostart::MacosLauncher;
 
@@ -9,16 +6,12 @@ pub mod commands;
 pub mod dao;
 pub mod dto;
 pub mod util;
-use chrono::{Local, Timelike};
+use chrono::{ Local, Timelike };
 use log::info;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::{ Arc, Mutex };
 use std::time::Duration;
-use std::{
-    fs::{self, OpenOptions},
-    io,
-    path::PathBuf,
-};
+use std::{ fs::{ self, OpenOptions }, io, path::PathBuf };
 use tauri::Manager;
 use tokio::sync::RwLock;
 use util::AppConfig;
@@ -34,27 +27,14 @@ fn setup_logger(target_dir: &PathBuf) -> Result<(), fern::InitError> {
         println!("日志轮转失败: {}", e);
     }
     // 打开日志文件
-    let log_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(&log_path)?;
+    let log_file = OpenOptions::new().append(true).create(true).open(&log_path)?;
 
     // 配置日志系统
-    fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "[{}][{}][{}] {}",
-                Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
+    fern::Dispatch
+        ::new()
+        .format(|out, message, record| { out.finish(format_args!("[{}][{}][{}] {}", Local::now().format("%Y-%m-%d %H:%M:%S"), record.target(), record.level(), message)) })
         .level(log::LevelFilter::Info)
-        .level_for(
-            "tao::platform_impl::platform::event_loop::runner",
-            log::LevelFilter::Error,
-        )
+        .level_for("tao::platform_impl::platform::event_loop::runner", log::LevelFilter::Error)
         .chain(std::io::stdout())
         .chain(fern::Output::writer(Box::new(log_file), "\n"))
         .apply()?;
@@ -103,7 +83,8 @@ fn rotate_logs(log_path: &PathBuf) -> io::Result<()> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    tauri::Builder
+        ::default()
         .plugin(tauri_plugin_fs::init())
         .manage(TcpClientState::default())
         .manage(MulticastState::default())
@@ -137,14 +118,13 @@ pub fn run() {
                 config_clone = config.clone(); // 克隆配置数据
             } // 锁在这里释放
 
+            //人脸识别
+            if let Err(e) = commands::init_face_recognition(app.handle()) {
+                eprintln!("人脸识别初始化警告: {}", e);
+            }
             tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(Duration::from_secs(2)).await;
-                let res = connect_db(
-                    &config_clone.ip,
-                    &config_clone.username,
-                    &config_clone.password,
-                )
-                .await;
+                let res = connect_db(&config_clone.ip, &config_clone.username, &config_clone.password).await;
                 info!("数据库启动 {:?}", res);
             });
 
@@ -152,10 +132,7 @@ pub fn run() {
         })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_autostart::init(
-            MacosLauncher::LaunchAgent,
-            None,
-        ))
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_os::init())

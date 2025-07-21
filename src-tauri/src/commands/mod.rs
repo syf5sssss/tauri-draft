@@ -11,6 +11,8 @@ pub mod tcp;
 pub mod thread;
 pub mod udp;
 pub mod blazeface;
+pub mod recog2021;
+pub mod detectyunet2023;
 
 // 导出所有命令函数
 pub use book::*;
@@ -26,6 +28,8 @@ pub use tcp::*;
 pub use thread::*;
 pub use udp::*;
 pub use blazeface::*;
+pub use recog2021::*;
+pub use detectyunet2023::*;
 
 // 生成最终的处理函数
 #[macro_export]
@@ -98,6 +102,15 @@ macro_rules! register_commands {
             $crate::commands::blazeface::face_init,
             $crate::commands::blazeface::write_file,
             $crate::commands::blazeface::cmd_detect_face_position,
+            $crate::commands::detectyunet2023::detect_faces,
+            $crate::commands::detectyunet2023::extract_features,
+            $crate::commands::detectyunet2023::compare_features,
+            $crate::commands::recog2021::add_face,
+            $crate::commands::recog2021::delete_face,
+            $crate::commands::recog2021::get_all_faces,
+            $crate::commands::recog2021::start_recognition,
+            $crate::commands::recog2021::get_face_image,
+            $crate::commands::recog2021::save_captured_frame,
             $crate::commands::sqlx::connect_db,
             $crate::commands::sqlx::get_alldbname,
             $crate::commands::sqlx::get_alltablenamebydbname,
